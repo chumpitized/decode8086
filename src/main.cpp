@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <queue>
 
 using namespace std;
 
@@ -29,8 +28,8 @@ const char* register_strings[]{
 };
 
 const char* determine_register(Registers reg1, Registers reg2, uint8_t w) {
-	if (w == 0b00000001) return register_strings[reg1];
-	else return register_strings[reg2];
+	if (w == 0b00000001) return register_strings[reg2];
+	else return register_strings[reg1];
 }
 
 const char* get_register(uint8_t byte, uint8_t w) {
@@ -102,5 +101,31 @@ void decode_instruction(uint8_t byte1, uint8_t byte2) {
 }
 
 int main() {
-	decode_instruction(0b10001000, 0b00000000);
+    ifstream file("bin/listing_0038_many_register_mov", std::ios::binary);
+ 
+	if (file) {
+ 
+		file.seekg(0, file.end);
+		int length = file.tellg();
+
+		//we actually need to support binary files of variable lengths
+		if (length & 1) return 0;
+		file.seekg(0, file.beg);
+ 
+		uint8_t* buffer = new uint8_t[length];
+ 
+		file.read(reinterpret_cast<char *>(buffer), length);
+ 
+		file.close();
+ 
+		for (int i = 0; i < length; i += 2) {
+			uint8_t byte1 = buffer[i];
+			uint8_t byte2 = buffer[i + 1];
+			decode_instruction(byte1, byte2);
+		}
+ 
+		delete[] buffer;
+	}
+
+    return 0;
 }

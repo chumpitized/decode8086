@@ -101,7 +101,8 @@ void decode_instruction(uint8_t byte1, uint8_t byte2) {
 }
 
 int main() {
-    ifstream file("bin/listing_0038_many_register_mov", std::ios::binary);
+	fstream file;
+    file.open("bin/listing_0038_many_register_mov", ios::in | ios::binary);
  
 	if (file) {
  
@@ -111,8 +112,9 @@ int main() {
 		//we actually need to support binary files of variable lengths
 		if (length & 1) return 0;
 		file.seekg(0, file.beg);
- 
-		uint8_t* buffer = new uint8_t[length];
+
+		//stack-allocated array
+		uint8_t buffer[length];
  
 		file.read(reinterpret_cast<char *>(buffer), length);
  
@@ -124,8 +126,9 @@ int main() {
 			decode_instruction(byte1, byte2);
 		}
  
-		delete[] buffer;
 	}
+
+	//file.open("listing_0038_many_register_mov", ios::out | ios::binary);
 
     return 0;
 }

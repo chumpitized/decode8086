@@ -64,56 +64,15 @@ const char* get_register(uint8_t byte, uint8_t w) {
 	return reg;
 }
 
-void decode_instruction(uint8_t byte1, uint8_t byte2) {
-	//byte 1
-	uint8_t opCode	= byte1 >> 2;
-	uint8_t d 		= (byte1 & 0b00000010) >> 1;
-	uint8_t w 		= byte1 & 0b00000001;
-
-	//byte 2
-	uint8_t mod		= byte2 >> 6;
-	uint8_t reg		= (byte2 & 0b00111000) >> 3;
-	uint8_t rm 		= byte2 & 0b00000111;
-
-	const char* asmOpCode;
-
-	switch(opCode) {
-		case 0b00100010:
-			asmOpCode = "mov";
+const char* get_asm_op_code(uint8_t opcode) {
+	switch(opcode) {
+		case 0b10001000:
+			return "mov";
 			break;
 		default:
 			cout << "OPCODE WASN'T 100010" << endl;
 			abort();
 	}
-
-	const char* src;
-	const char* dst;
-
-	if (d == 0b00000000) {
-		src = get_register(reg, w);
-		dst = get_register(rm, w);
-	} else {
-		src = get_register(rm, w);
-		dst = get_register(reg, w);
-	}
-
-	cout << asmOpCode << " " << dst << ", " << src << endl;
-}
-
-void decode_op_code(uint8_t byte) {
-	uint8_t mask = 0b11111100;
-	uint8_t opcode = byte & mask;
-
-	if (opcode == 0b10001000) {
-		//register to register move
-		return;
-	}
-
-	if (opcode == 0b10110000) {
-		//register/memory to memory/register move
-		return;
-	}
-
 }
 
 int main() {
@@ -140,6 +99,8 @@ int main() {
 			uint8_t opcode 	= byte & 0b11111100;
 
 			if (opcode == 0b10001000) {
+				//register/memory to memory/register move
+
 				uint8_t d = byte & 0b00000010;
 				uint8_t w = byte & 0b00000001;
 
@@ -151,7 +112,7 @@ int main() {
 
 				uint8_t byte2 	= buffer[ptr];
 				uint8_t mod 	= byte2 & 0b11000000;
-				uint8_t reg		= byte2 & 0b00111000;
+				uint8_t reg		= (byte2 & 0b00111000) >> 3; //we shift these bits to make it easier to match against both reg and rm
 				uint8_t rm		= byte2 & 0b00000111;
 
 				switch (mod) {
@@ -169,20 +130,34 @@ int main() {
 						// we need the 3rd bit, then the 4th
 						ptr++;
 
-
 						break;
 
 					case 0b11000000:
 						//register mode
-						break;
 
+						const char* src;
+						const char* dst;
+
+						if (d == 0b00000000) {
+							src = get_register(reg, w);
+							dst = get_register(rm, w);
+						} else {
+							src = get_register(rm, w);
+							dst = get_register(reg, w);
+						}
+
+						const char* asmCode = get_asm_op_code(opcode);
+
+						cout << asmCode  << " " << dst << ", " << src << endl;
+						break;
 				}
 
+				ptr++;
 				continue;
 			}
 
 			if (opcode == 0b10110000) {
-				//register/memory to memory/register move
+				//immediate to register move
 				continue;
 			}
 
@@ -195,7 +170,7 @@ int main() {
 		}
 
 		//ultimately inc the ptr by 1
-		ptr++;
+		//ptr++;
 	}
 
     return 0;

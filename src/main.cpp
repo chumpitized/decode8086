@@ -100,6 +100,22 @@ void decode_instruction(uint8_t byte1, uint8_t byte2) {
 	cout << asmOpCode << " " << dst << ", " << src << endl;
 }
 
+void decode_op_code(uint8_t byte) {
+	uint8_t mask = 0b11111100;
+	uint8_t opcode = byte & mask;
+
+	if (opcode == 0b10001000) {
+		//register to register move
+		return;
+	}
+
+	if (opcode == 0b10110000) {
+		//register/memory to memory/register move
+		return;
+	}
+
+}
+
 int main() {
 	fstream file;
     file.open("bin/listing_0038_many_register_mov", ios::in | ios::binary);
@@ -108,27 +124,79 @@ int main() {
  
 		file.seekg(0, file.end);
 		int length = file.tellg();
-
-		//we actually need to support binary files of variable lengths
-		if (length & 1) return 0;
 		file.seekg(0, file.beg);
 
 		//stack-allocated array
 		uint8_t buffer[length];
  
-		file.read(reinterpret_cast<char *>(buffer), length);
- 
+		file.read(reinterpret_cast<char*>(buffer), length);
 		file.close();
- 
-		for (int i = 0; i < length; i += 2) {
-			uint8_t byte1 = buffer[i];
-			uint8_t byte2 = buffer[i + 1];
-			decode_instruction(byte1, byte2);
-		}
- 
-	}
 
-	//file.open("listing_0038_many_register_mov", ios::out | ios::binary);
+		int ptr = 0;
+
+		while (ptr < length) {
+			uint8_t byte 	= buffer[ptr];
+			//this is technically still wrong for all opcodes but will work for now
+			uint8_t opcode 	= byte & 0b11111100;
+
+			if (opcode == 0b10001000) {
+				uint8_t d = byte & 0b00000010;
+				uint8_t w = byte & 0b00000001;
+
+				ptr++;
+				if (ptr >= length) {
+					cout << "ERROR: TRIED PROCESSING INSTRUCTION BUT PTR PASSED FILE LENGTH" << endl;
+					abort();
+				}
+
+				uint8_t byte2 	= buffer[ptr];
+				uint8_t mod 	= byte2 & 0b11000000;
+				uint8_t reg		= byte2 & 0b00111000;
+				uint8_t rm		= byte2 & 0b00000111;
+
+				switch (mod) {
+					case 0b00000000:
+						//16-bit displacement only when RM == 110
+						break;
+
+					case 0b01000000:
+						//8-bit displacement
+						ptr++;
+						break;
+
+					case 0b10000000:
+						//16-bit displacement
+						// we need the 3rd bit, then the 4th
+						ptr++;
+
+
+						break;
+
+					case 0b11000000:
+						//register mode
+						break;
+
+				}
+
+				continue;
+			}
+
+			if (opcode == 0b10110000) {
+				//register/memory to memory/register move
+				continue;
+			}
+
+
+
+
+
+
+
+		}
+
+		//ultimately inc the ptr by 1
+		ptr++;
+	}
 
     return 0;
 }

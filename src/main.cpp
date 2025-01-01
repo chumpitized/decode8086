@@ -75,6 +75,37 @@ const char* get_asm_op_code(uint8_t opcode) {
 	}
 }
 
+const char* ea_calculation(uint8_t byte) {
+	const char* rm;
+	switch (byte) {
+		case 0b00000000:
+			rm = "bx + si";
+			break;
+		case 0b00000001:
+			rm =  "bx + di";
+			break;
+		case 0b00000010:
+			rm =  "bp + si";
+			break;
+		case 0b00000011:
+			rm =  "bp + di";
+			break;
+		case 0b00000100:
+			rm = "si";
+			break;
+		case 0b00000101:
+			rm =  "di";
+			break;
+		case 0b00000110:
+			rm = "bp";
+			break;
+		case 0b00000111:
+			rm = "bx";
+			break;
+	}
+	return rm;
+}
+
 int main() {
 	fstream file;
     file.open("bin/listing_0038_many_register_mov", ios::in | ios::binary);
@@ -91,8 +122,8 @@ int main() {
 		file.read(reinterpret_cast<char*>(buffer), length);
 		file.close();
 
+		//pointer in the byte buffer
 		int ptr = 0;
-
 		while (ptr < length) {
 			uint8_t byte 	= buffer[ptr];
 			//this is technically still wrong for all opcodes but will work for now
@@ -115,15 +146,30 @@ int main() {
 				uint8_t reg		= (byte2 & 0b00111000) >> 3; //we shift these bits to make it easier to match against both reg and rm
 				uint8_t rm		= byte2 & 0b00000111;
 
+				const char* asmCode = get_asm_op_code(opcode);
+
 				switch (mod) {
 					case 0b00000000:
 						//16-bit displacement only when RM == 110
 						break;
 
-					case 0b01000000:
+					case 0b01000000: {
 						//8-bit displacement
 						ptr++;
+						//could check ptr against length after inc...
+						uint8_t byte3 = buffer[ptr];
+						const char* ea = ea_calculation(rm);
+						const char* movRegister = get_register(reg, w);
+
+
+						if (d == 0b00000010) {
+							cout << asmCode << movRegister << ", [" << ea << " + " << byte3 << "]" << endl;  
+						} else {
+							cout << asmCode << " [" << ea << " + " << byte3 << "], " << movRegister << endl;
+						}
+
 						break;
+					}
 
 					case 0b10000000:
 						//16-bit displacement
@@ -132,7 +178,7 @@ int main() {
 
 						break;
 
-					case 0b11000000:
+					case 0b11000000: {
 						//register mode
 
 						const char* src;
@@ -146,10 +192,9 @@ int main() {
 							dst = get_register(reg, w);
 						}
 
-						const char* asmCode = get_asm_op_code(opcode);
-
 						cout << asmCode  << " " << dst << ", " << src << endl;
 						break;
+					}
 				}
 
 				ptr++;

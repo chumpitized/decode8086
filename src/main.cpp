@@ -122,10 +122,10 @@ int main() {
 		file.read(reinterpret_cast<char*>(buffer), length);
 		file.close();
 
-		//pointer in the byte buffer
-		int ptr = 0;
-		while (ptr < length) {
-			uint8_t byte 	= buffer[ptr];
+		//idx in the byte buffer
+		int idx = 0;
+		while (idx < length) {
+			uint8_t byte 	= buffer[idx];
 			//this is technically still wrong for all opcodes but will work for now
 			uint8_t opcode 	= byte & 0b11111100;
 
@@ -135,13 +135,13 @@ int main() {
 				uint8_t d = byte & 0b00000010;
 				uint8_t w = byte & 0b00000001;
 
-				ptr++;
-				if (ptr >= length) {
-					cout << "ERROR: TRIED PROCESSING INSTRUCTION BUT PTR PASSED FILE LENGTH" << endl;
+				idx++;
+				if (idx >= length) {
+					cout << "ERROR: TRIED PROCESSING INSTRUCTION BUT idx PASSED FILE LENGTH" << endl;
 					abort();
 				}
 
-				uint8_t byte2 	= buffer[ptr];
+				uint8_t byte2 	= buffer[idx];
 				uint8_t mod 	= byte2 & 0b11000000;
 				uint8_t reg		= (byte2 & 0b00111000) >> 3; //we shift these bits to make it easier to match against both reg and rm
 				uint8_t rm		= byte2 & 0b00000111;
@@ -149,15 +149,54 @@ int main() {
 				const char* asmCode = get_asm_op_code(opcode);
 
 				switch (mod) {
-					case 0b00000000:
-						//16-bit displacement only when RM == 110
-						break;
+					//No displacement, except when RM == 110 (then 16-bit disp.)
+					case 0b00000000: {
+						idx++;
+						uint8_t byte2 = buffer[idx];
+												
+						const char* ea = ea_calculation(rm);
+						const char* movRegister = get_register(reg, w);
 
-					case 0b01000000: {
-						//8-bit displacement
-						ptr++;
-						//could check ptr against length after inc...
-						uint8_t byte3 = buffer[ptr];
+						//do 16-bit displacement
+						if (rm == 0b00000110) {
+							idx++;
+							uint8_t byte3 = buffer[idx];
+
+							idx++;
+							uint8_t byte4 = buffer[idx];
+
+							//does this addition actually work?
+							uint16_t disp = byte3 + byte4;
+							
+							if (d == 0b00000010) {
+								cout << asmCode << movRegister << ", [" << ea << " + " << byte3 << "]" << endl;  
+							} else {
+								cout << asmCode << " [" << ea << " + " << byte3 << "], " << movRegister << endl;
+							}					
+
+							idx++;
+							break;
+						}
+
+						//else no displacement
+								
+		//				const char* ea = ea_calculation(byte2);
+		//				const char* movRegister = get_register(reg, w);
+
+						if (d == 0b00000010) {
+							cout << asmCode << movRegister << ", [" << ea << "]" << endl;  
+						} else {
+							cout << asmCode << " [" << ea << "], " << movRegister << endl;
+						}					
+
+						break;
+					}
+
+					//8-bit displacement
+					case 0b01000000: {					
+						idx++;
+						//could check idx against length after inc...
+						uint8_t byte3 = buffer[idx];
 						const char* ea = ea_calculation(rm);
 						const char* movRegister = get_register(reg, w);
 
@@ -168,19 +207,37 @@ int main() {
 							cout << asmCode << " [" << ea << " + " << byte3 << "], " << movRegister << endl;
 						}
 
+						idx++;
 						break;
 					}
 
-					case 0b10000000:
-						//16-bit displacement
+					//16-bit displacement
+					case 0b10000000: {					
 						// we need the 3rd bit, then the 4th
-						ptr++;
+						idx++;
+						uint8_t byte3 = buffer[idx];
 
+						idx++;
+						uint8_t byte4 = buffer[idx];
+
+						//does this addition actually work?
+						uint16_t disp = byte3 + byte4;
+
+						const char* ea = ea_calculation(rm);
+						const char* movRegister = get_register(reg, w);
+
+						if (d == 0b00000010) {
+							cout << asmCode << movRegister << ", [" << ea << " + " << byte3 << "]" << endl;  
+						} else {
+							cout << asmCode << " [" << ea << " + " << byte3 << "], " << movRegister << endl;
+						}					
+
+						idx++;
 						break;
+					}
 
+					//register mode
 					case 0b11000000: {
-						//register mode
-
 						const char* src;
 						const char* dst;
 
@@ -197,7 +254,7 @@ int main() {
 					}
 				}
 
-				ptr++;
+				idx++;
 				continue;
 			}
 
@@ -213,9 +270,6 @@ int main() {
 
 
 		}
-
-		//ultimately inc the ptr by 1
-		//ptr++;
 	}
 
     return 0;

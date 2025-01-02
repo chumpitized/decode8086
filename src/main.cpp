@@ -97,7 +97,7 @@ const char* ea_calculation(uint8_t byte) {
 			rm = "si";
 			break;
 		case 0b00000101:
-			rm =  "di";
+			rm = "di";
 			break;
 		case 0b00000110:
 			rm = "bp";
@@ -130,9 +130,8 @@ int main() {
 		while (idx < length) {
 			uint8_t byte 	= buffer[idx];
 			//this is technically still wrong for all opcodes but will work for now
-			uint8_t opcode 	= byte & 0b11111100;
 
-			if (opcode == 0b10001000) {
+			if ((byte & 0b11111100) == 0b10001000) {
 				//register/memory to memory/register move
 
 				uint8_t d = byte & 0b00000010;
@@ -149,31 +148,27 @@ int main() {
 				uint8_t reg		= (byte2 & 0b00111000) >> 3; //we shift these bits to make it easier to match against both reg and rm
 				uint8_t rm		= byte2 & 0b00000111;
 
-				const char* asmCode = get_asm_op_code(opcode);
+				const char* asmCode = get_asm_op_code(0b10001000);
 
 				switch (mod) {
 					//No displacement, except when RM == 110 (then 16-bit disp.)
 					case 0b00000000: {
-						idx++;
-						uint8_t byte2 = buffer[idx];
-												
 						const char* ea = ea_calculation(rm);
 						const char* movRegister = get_register(reg, w);
-
+					
 						//do 16-bit displacement
 						if (rm == 0b00000110) {
 							idx++;
 							uint8_t byte3 = buffer[idx];
-
 							idx++;
 							uint8_t byte4 = buffer[idx];
 
 							uint16_t disp = byte3 + byte4;
 							
 							if (d == 0b00000010) {
-								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
+								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;  
 							} else {
-								cout << asmCode << " [" << ea << " + " << +byte3 << "], " << movRegister << endl;
+								cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister << endl;
 							}					
 
 							break;
@@ -213,7 +208,6 @@ int main() {
 						// we need the 3rd bit, then the 4th
 						idx++;
 						uint8_t byte3 = buffer[idx];
-
 						idx++;
 						uint8_t byte4 = buffer[idx];
 
@@ -253,24 +247,24 @@ int main() {
 				continue;
 			}
 
-			if (opcode == 0b10110000) {
+			if ((byte & 0b11110000) == 0b10110000) {
 				//immediate to register move
-				uint8_t w 	= byte & 0b00001000;
+				uint8_t w 	= (byte & 0b00001000) >> 3;
 				uint8_t reg = byte & 0b00000111;
 
-				const char* asmCode =  get_asm_op_code(opcode);
+				const char* asmCode =  get_asm_op_code(0b10110000);
 
 				const char* dst = get_register(reg, w);
 
 				idx++;
 				uint8_t byte2 = buffer[idx];
 
-				if (w == 0b00001000) {
+				if (w == 0b0000001) {
 					idx++;
 					uint8_t byte3 = buffer[idx];
-					uint16_t value = byte2 + byte3;
+					uint16_t disp = byte2 + byte3;
 
-					cout << asmCode << " " << dst << ", " << value << endl;
+					cout << asmCode << " " << dst << ", " << disp << endl;
 					
 					idx++;
 					continue;
@@ -282,7 +276,7 @@ int main() {
 				continue;
 			}
 
-			idx++;
+			//idx++;
 		}
 	}
 

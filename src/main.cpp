@@ -69,6 +69,9 @@ const char* get_asm_op_code(uint8_t opcode) {
 		case 0b10001000:
 			return "mov";
 			break;
+		case 0b10110000:
+			return "mov";
+			break;
 		default:
 			cout << "OPCODE WASN'T 100010" << endl;
 			abort();
@@ -108,7 +111,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0038_many_register_mov", ios::in | ios::binary);
+    file.open("bin/listing_0039_more_movs", ios::in | ios::binary);
  
 	if (file) {
  
@@ -165,26 +168,21 @@ int main() {
 							idx++;
 							uint8_t byte4 = buffer[idx];
 
-							//does this addition actually work?
 							uint16_t disp = byte3 + byte4;
 							
 							if (d == 0b00000010) {
-								cout << asmCode << movRegister << ", [" << ea << " + " << byte3 << "]" << endl;  
+								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
 							} else {
-								cout << asmCode << " [" << ea << " + " << byte3 << "], " << movRegister << endl;
+								cout << asmCode << " [" << ea << " + " << +byte3 << "], " << movRegister << endl;
 							}					
 
-							idx++;
 							break;
 						}
 
-						//else no displacement
-								
-		//				const char* ea = ea_calculation(byte2);
-		//				const char* movRegister = get_register(reg, w);
+						//else no displacement		
 
 						if (d == 0b00000010) {
-							cout << asmCode << movRegister << ", [" << ea << "]" << endl;  
+							cout << asmCode << " " <<  movRegister << ", [" << ea << "]" << endl;  
 						} else {
 							cout << asmCode << " [" << ea << "], " << movRegister << endl;
 						}					
@@ -202,12 +200,11 @@ int main() {
 
 
 						if (d == 0b00000010) {
-							cout << asmCode << movRegister << ", [" << ea << " + " << byte3 << "]" << endl;  
+							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
 						} else {
-							cout << asmCode << " [" << ea << " + " << byte3 << "], " << movRegister << endl;
+							cout << asmCode << " [" << ea << " + " << +byte3 << "], " << movRegister << endl;
 						}
 
-						idx++;
 						break;
 					}
 
@@ -220,19 +217,17 @@ int main() {
 						idx++;
 						uint8_t byte4 = buffer[idx];
 
-						//does this addition actually work?
 						uint16_t disp = byte3 + byte4;
 
 						const char* ea = ea_calculation(rm);
 						const char* movRegister = get_register(reg, w);
 
 						if (d == 0b00000010) {
-							cout << asmCode << movRegister << ", [" << ea << " + " << byte3 << "]" << endl;  
+							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
 						} else {
-							cout << asmCode << " [" << ea << " + " << byte3 << "], " << movRegister << endl;
+							cout << asmCode << " [" << ea << " + " << +byte3 << "], " << movRegister << endl;
 						}					
 
-						idx++;
 						break;
 					}
 
@@ -249,7 +244,7 @@ int main() {
 							dst = get_register(reg, w);
 						}
 
-						cout << asmCode  << " " << dst << ", " << src << endl;
+						cout << asmCode << " " << dst << ", " << src << endl;
 						break;
 					}
 				}
@@ -260,15 +255,34 @@ int main() {
 
 			if (opcode == 0b10110000) {
 				//immediate to register move
+				uint8_t w 	= byte & 0b00001000;
+				uint8_t reg = byte & 0b00000111;
+
+				const char* asmCode =  get_asm_op_code(opcode);
+
+				const char* dst = get_register(reg, w);
+
+				idx++;
+				uint8_t byte2 = buffer[idx];
+
+				if (w == 0b00001000) {
+					idx++;
+					uint8_t byte3 = buffer[idx];
+					uint16_t value = byte2 + byte3;
+
+					cout << asmCode << " " << dst << ", " << value << endl;
+					
+					idx++;
+					continue;
+				}
+
+				cout << asmCode << " " << dst << ", " << +byte2 << endl;
+
+				idx++;
 				continue;
 			}
 
-
-
-
-
-
-
+			idx++;
 		}
 	}
 

@@ -163,8 +163,8 @@ int main() {
 							idx++;
 							uint8_t byte4 = buffer[idx];
 
-							uint16_t disp = byte3 + byte4;
-							
+							uint16_t disp = (uint16_t)byte4 >> 8 | byte3;
+
 							if (d == 0b00000010) {
 								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;  
 							} else {
@@ -193,7 +193,6 @@ int main() {
 						const char* ea = ea_calculation(rm);
 						const char* movRegister = get_register(reg, w);
 
-
 						if (d == 0b00000010) {
 							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
 						} else {
@@ -211,15 +210,17 @@ int main() {
 						idx++;
 						uint8_t byte4 = buffer[idx];
 
-						uint16_t disp = byte3 + byte4;
+						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
+
+						//uint16_t disp = byte3 + byte4;
 
 						const char* ea = ea_calculation(rm);
-						const char* movRegister = get_register(reg, w);
+						const char* movRegister = get_register(reg, w);		
 
-						if (d == 0b00000010) {
-							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
+						if (d == 0b00000010) {							
+							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;  
 						} else {
-							cout << asmCode << " [" << ea << " + " << +byte3 << "], " << movRegister << endl;
+							cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister << endl;
 						}					
 
 						break;
@@ -262,7 +263,7 @@ int main() {
 				if (w == 0b0000001) {
 					idx++;
 					uint8_t byte3 = buffer[idx];
-					uint16_t disp = byte2 + byte3;
+					uint16_t disp = (uint16_t)byte3 << 8 | byte2;
 
 					cout << asmCode << " " << dst << ", " << disp << endl;
 					

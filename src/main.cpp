@@ -129,8 +129,9 @@ int main() {
 		int idx = 0;
 		while (idx < length) {
 			uint8_t byte 	= buffer[idx];
-			//this is technically still wrong for all opcodes but will work for now
 
+
+			// Register/memory to/from register
 			if ((byte & 0b11111100) == 0b10001000) {
 				//register/memory to memory/register move
 
@@ -166,7 +167,7 @@ int main() {
 							uint16_t disp = (uint16_t)byte4 >> 8 | byte3;
 
 							if (d == 0b00000010) {
-								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;  
+								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;
 							} else {
 								cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister << endl;
 							}					
@@ -177,19 +178,19 @@ int main() {
 						//else no displacement		
 
 						if (d == 0b00000010) {
-							cout << asmCode << " " <<  movRegister << ", [" << ea << "]" << endl;  
+							cout << asmCode << " " <<  movRegister << ", [" << ea << "]" << endl;
 						} else {
 							cout << asmCode << " [" << ea << "], " << movRegister << endl;
-						}					
+						}
 
 						break;
 					}
 
 					//8-bit displacement
-					case 0b01000000: {					
+					case 0b01000000: {
 						idx++;
-						//could check idx against length after inc...
 						uint8_t byte3 = buffer[idx];
+
 						const char* ea = ea_calculation(rm);
 						const char* movRegister = get_register(reg, w);
 
@@ -204,15 +205,12 @@ int main() {
 
 					//16-bit displacement
 					case 0b10000000: {					
-						// we need the 3rd bit, then the 4th
 						idx++;
 						uint8_t byte3 = buffer[idx];
 						idx++;
 						uint8_t byte4 = buffer[idx];
 
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
-
-						//uint16_t disp = byte3 + byte4;
 
 						const char* ea = ea_calculation(rm);
 						const char* movRegister = get_register(reg, w);		
@@ -248,8 +246,10 @@ int main() {
 				continue;
 			}
 
+
+
+			//immediate to register move
 			if ((byte & 0b11110000) == 0b10110000) {
-				//immediate to register move
 				uint8_t w 	= (byte & 0b00001000) >> 3;
 				uint8_t reg = byte & 0b00000111;
 

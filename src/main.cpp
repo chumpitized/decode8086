@@ -32,6 +32,8 @@ const char* determine_register(Registers reg1, Registers reg2, uint8_t w) {
 	else return register_strings[reg1];
 }
 
+
+
 const char* get_register(uint8_t byte, uint8_t w) {
 	const char* reg;
 	
@@ -129,6 +131,61 @@ int main() {
 		int idx = 0;
 		while (idx < length) {
 			uint8_t byte 	= buffer[idx];
+
+			//We need to match on the top-level opcode for add, sub, and cmp
+			//then we need to match on the mod(?) field to determine which instruction
+			//we're actually dealing with
+
+
+			//ADD, SUB, CMP immediate-to-register
+			if ((byte & 0b11111100) == 0b10000000) {
+				//all 3
+				idx++;
+				uint8_t byte2 			= buffer[idx];
+				uint8_t mod 			= (byte2 & 0b11000000) >> 6;
+				uint8_t w 				= (byte & 0b00000001);
+				uint8_t s 				= (byte & 0b00000010);
+				uint8_t rm 				= byte2 & 0b00000111;
+				const char* asmOpCode;
+
+				//Add
+				if ((byte2 & 0b00111000) == 0b00000000) asmOpCode = "add";
+				//Sub
+				if ((byte2 & 0b00111000) == 0b00101000) asmOpCode = "sub";
+				//Cmp
+				if ((byte2 & 0b00111000) == 0b00111000) asmOpCode = "cmp";
+				
+				//check mod and do shit...
+
+				if (w == s) {
+					// we grab 3 and 4, then we grab 5 for the 8-bit immediate value...
+
+				}
+
+				switch (mod) {
+					0b00000000: {
+						uint8_t disp = ea_calculation(rm);
+						
+						if (w == (uint8_t)1) {
+							const char* dest = get_register(rm, w);
+						}
+
+					}
+
+
+
+				}
+
+
+
+
+			}
+
+
+
+
+
+
 
 
 			// Register/memory to/from register

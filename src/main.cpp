@@ -149,36 +149,117 @@ int main() {
 				const char* asmOpCode;
 
 				//Add
-				if ((byte2 & 0b00111000) == 0b00000000) asmOpCode = "add";
+				if ((byte2 & 0b00111000) == 0b00000000) asmOpCode = "add ";
 				//Sub
-				if ((byte2 & 0b00111000) == 0b00101000) asmOpCode = "sub";
+				if ((byte2 & 0b00111000) == 0b00101000) asmOpCode = "sub ";
 				//Cmp
-				if ((byte2 & 0b00111000) == 0b00111000) asmOpCode = "cmp";
+				if ((byte2 & 0b00111000) == 0b00111000) asmOpCode = "cmp ";
 				
-				//check mod and do shit...
+				//print op code
+				cout << asmOpCode;
 
-				if (w == s) {
-					// we grab 3 and 4, then we grab 5 for the 8-bit immediate value...
-
-				}
+				if (w == 0b00000000) cout << "byte ";
+				else cout << "word ";
 
 				switch (mod) {
-					0b00000000: {
-						uint8_t disp = ea_calculation(rm);
-						
-						if (w == (uint8_t)1) {
-							const char* dest = get_register(rm, w);
+					case 0b00000000: {
+						const char* ea = ea_calculation(rm);
+						cout << "[" << ea << "], ";
+
+						idx++;
+						uint8_t data = buffer[idx];						
+
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
+
+							uint16_t allData = data2 << 8 | data;
+
+							cout << +allData;
+						} else {
+							cout << +data;
 						}
 
+						break;
 					}
 
+					case 0b01000000: {
+						const char* ea = ea_calculation(rm);
 
+						idx++;
+						uint8_t byte3 = buffer[idx];
 
+						cout << "[" << ea << " + " << +byte3 << "], ";
+
+						idx++;
+						uint8_t data = buffer[idx];
+
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
+
+							uint16_t allData = data2 << 8 | data;
+
+							cout << +allData;
+						} else {
+							cout << +data;
+						}
+						break;
+					}
+
+					case 0b10000000: {
+						const char* ea = ea_calculation(rm);
+						
+						idx++;
+						uint8_t byte3 = buffer[idx];
+						idx++;
+						uint8_t byte4 = buffer[idx];
+
+						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
+
+						cout << "[" << ea << " + " << +disp << "], ";
+
+						idx++;
+						uint8_t data = buffer[idx];
+
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
+
+							uint16_t allData = data2 << 8 | data;
+
+							cout << +allData;
+						} else {
+							cout << +data;
+						}
+						break;
+					}
+
+					case 0b11000000: {
+						const char* reg = get_register(rm, w);
+
+						cout << reg << ", "; 
+
+						idx++;
+						uint8_t data = buffer[idx];
+
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
+
+							uint16_t allData = data2 << 8 | data;
+
+							cout << +allData;
+						} else {
+							cout << +data;
+						}						
+
+						break;
+					}
 				}
 
-
-
-
+				idx++;
+				continue;
 			}
 
 
@@ -188,7 +269,7 @@ int main() {
 
 
 
-			// Register/memory to/from register
+			// Mov Register/memory to/from register
 			if ((byte & 0b11111100) == 0b10001000) {
 				//register/memory to memory/register move
 
@@ -221,7 +302,7 @@ int main() {
 							idx++;
 							uint8_t byte4 = buffer[idx];
 
-							uint16_t disp = (uint16_t)byte4 >> 8 | byte3;
+							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 							if (d == 0b00000010) {
 								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;

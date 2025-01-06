@@ -135,226 +135,223 @@ int main() {
 			uint8_t imm_mov					= 0b11110000 & byte;
 
 			//add, sub, cmp
-		//	if (opcode == 0b00000000 || opcode == 0b00101000 || opcode == 0b00111000) {
-		//		cout << "got here:  add, sub, cmp" << endl;
-
-		//		idx++;
-		//		uint8_t byte2 = buffer[idx];
-		//		uint8_t mod = (byte2 & 0b11000000) >> 6;
-		//		uint8_t reg = (byte2 & 0b00111000) >> 3;
-		//		uint8_t rm	= byte2 & 0b00000011;
+			if (mov_add_sub_cmp_code == 0b00000000 || mov_add_sub_cmp_code == 0b00101000 || mov_add_sub_cmp_code == 0b00111000) {
+				idx++;
+				uint8_t byte2 = buffer[idx];
+				uint8_t mod = (byte2 & 0b11000000) >> 6;
+				uint8_t reg = (byte2 & 0b00111000) >> 3;
+				uint8_t rm	= byte2 & 0b00000011;
 				
-		//		uint8_t d = byte & 0b00000010;
-		//		uint8_t w = byte & 0b00000001;
+				uint8_t d = byte & 0b00000010;
+				uint8_t w = byte & 0b00000001;
 
-		//		const char* asmOpCode;
+				const char* asmOpCode;
 
-		//		if (opcode == 0b00000000) asmOpCode = "add";
-		//		if (opcode == 0b00101000) asmOpCode = "sub";
-		//		if (opcode == 0b00111000) asmOpCode = "cmp";
+				if (mov_add_sub_cmp_code == 0b00000000) asmOpCode = "add";
+				if (mov_add_sub_cmp_code == 0b00101000) asmOpCode = "sub";
+				if (mov_add_sub_cmp_code == 0b00111000) asmOpCode = "cmp";
 
-		//		cout << asmOpCode;
+				cout << asmOpCode;
 
-		//		switch (mod) {
-		//			case 0b00000000: {
-		//				const char* ea 		= ea_calculation(rm);
-		//				const char* regis 	= get_register(reg, w);
+				switch (mod) {
+					case 0b00000000: {
+						const char* ea 		= ea_calculation(rm);
+						const char* regis 	= get_register(reg, w);
 
-		//				const char* dest;
-		//				const char* src;
+						const char* dest;
+						const char* src;
 
-		//				if (d == 1) {
-		//					cout << regis << ", " << ea;
-		//				} else {
-		//					cout << ea << ", " << regis;
-		//				}
+						if (d == 1) {
+							cout << regis << ", " << ea;
+						} else {
+							cout << ea << ", " << regis;
+						}
 
-		//				break;
-		//			}
+						break;
+					}
 
-		//			case 0b01000000: {
-		//				const char* ea 		= ea_calculation(rm);
-		//				const char* regis 	= get_register(reg, w);
+					case 0b01000000: {
+						const char* ea 		= ea_calculation(rm);
+						const char* regis 	= get_register(reg, w);
 
-		//				const char* dest;
-		//				const char* src;
+						const char* dest;
+						const char* src;
 
-		//				idx++;
-		//				uint8_t disp = buffer[idx];
+						idx++;
+						uint8_t disp = buffer[idx];
 
-		//				if (d == 1) {
-		//					cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
-		//				} else {
-		//					cout << "[" << ea << " + " <<  +disp << "], " << regis;
-		//				}					
+						if (d == 1) {
+							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
+						} else {
+							cout << "[" << ea << " + " <<  +disp << "], " << regis;
+						}					
 						
-		//			}
+					}
 
-		//			case 0b10000000: {
-		//				const char* ea 		= ea_calculation(rm);
-		//				const char* regis 	= get_register(reg, w);
+					case 0b10000000: {
+						const char* ea 		= ea_calculation(rm);
+						const char* regis 	= get_register(reg, w);
 
-		//				const char* dest;
-		//				const char* src;
+						const char* dest;
+						const char* src;
 
-		//				idx++;
-		//				uint8_t byte3 = buffer[idx];
-		//				idx++;
-		//				uint8_t byte4 = buffer[idx];
+						idx++;
+						uint8_t byte3 = buffer[idx];
+						idx++;
+						uint8_t byte4 = buffer[idx];
 
-		//				uint16_t disp = (uint16_t)byte4 << 8 | byte3;
+						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
-		//				if (d == 1) {
-		//					cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
-		//				} else {
-		//					cout << "[" << ea << " + " <<  +disp << "], " << regis;
-		//				}											
-		//			}
+						if (d == 1) {
+							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
+						} else {
+							cout << "[" << ea << " + " <<  +disp << "], " << regis;
+						}											
+					}
 
-		////			case 0b11000000: {
-		////				if (rm == 0b00000110) {
+		//			case 0b11000000: {
+		//				if (rm == 0b00000110) {
 							
 
-		////				}
+		//				}
 
-		////			}
+		//			}
 					
 
 
 
 
-		//		}
-		//	}
+				}
+			}
 
 
 
 
-		//	//ADD, SUB, CMP immediate-to-register
-		//	if (opcode == 0b10000000) {
-		//		cout << "got here: imm to reg :  add, sub, cmp" << endl;
+			//ADD, SUB, CMP immediate-to-register
+			if (mov_add_sub_cmp_code == 0b10000000) {
 
-		//		//all 3
-		//		idx++;
-		//		uint8_t byte2 			= buffer[idx];
-		//		uint8_t mod 			= (byte2 & 0b11000000) >> 6;
-		//		uint8_t w 				= (byte & 0b00000001);
-		//		uint8_t s 				= (byte & 0b00000010);
-		//		uint8_t rm 				= byte2 & 0b00000111;
-		//		const char* asmOpCode;
+				//all 3
+				idx++;
+				uint8_t byte2 			= buffer[idx];
+				uint8_t mod 			= (byte2 & 0b11000000) >> 6;
+				uint8_t w 				= (byte & 0b00000001);
+				uint8_t s 				= (byte & 0b00000010);
+				uint8_t rm 				= byte2 & 0b00000111;
+				const char* asmOpCode;
 
-		//		//Add
-		//		if ((byte2 & 0b00111000) == 0b00000000) asmOpCode = "add ";
-		//		//Sub
-		//		if ((byte2 & 0b00111000) == 0b00101000) asmOpCode = "sub ";
-		//		//Cmp
-		//		if ((byte2 & 0b00111000) == 0b00111000) asmOpCode = "cmp ";
+				//Add
+				if ((byte2 & 0b00111000) == 0b00000000) asmOpCode = "add ";
+				//Sub
+				if ((byte2 & 0b00111000) == 0b00101000) asmOpCode = "sub ";
+				//Cmp
+				if ((byte2 & 0b00111000) == 0b00111000) asmOpCode = "cmp ";
 				
-		//		//print op code
-		//		cout << asmOpCode;
+				//print op code
+				cout << asmOpCode;
 
-		//		if (w == 0b00000000) cout << "byte ";
-		//		else cout << "word ";
+				if (w == 0b00000000) cout << "byte ";
+				else cout << "word ";
 
-		//		switch (mod) {
-		//			case 0b00000000: {
-		//				const char* ea = ea_calculation(rm);
-		//				cout << "[" << ea << "], ";
+				switch (mod) {
+					case 0b00000000: {
+						const char* ea = ea_calculation(rm);
+						cout << "[" << ea << "], ";
 
-		//				idx++;
-		//				uint8_t data = buffer[idx];						
+						idx++;
+						uint8_t data = buffer[idx];						
 
-		//				if (w == 1) {
-		//					idx++;
-		//					uint8_t data2 = buffer[idx];
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
 
-		//					uint16_t allData = data2 << 8 | data;
+							uint16_t allData = data2 << 8 | data;
 
-		//					cout << +allData;
-		//				} else {
-		//					cout << +data;
-		//				}
+							cout << +allData;
+						} else {
+							cout << +data;
+						}
 
-		//				break;
-		//			}
+						break;
+					}
 
-		//			case 0b01000000: {
-		//				const char* ea = ea_calculation(rm);
+					case 0b01000000: {
+						const char* ea = ea_calculation(rm);
 
-		//				idx++;
-		//				uint8_t byte3 = buffer[idx];
+						idx++;
+						uint8_t byte3 = buffer[idx];
 
-		//				cout << "[" << ea << " + " << +byte3 << "], ";
+						cout << "[" << ea << " + " << +byte3 << "], ";
 
-		//				idx++;
-		//				uint8_t data = buffer[idx];
+						idx++;
+						uint8_t data = buffer[idx];
 
-		//				if (w == 1) {
-		//					idx++;
-		//					uint8_t data2 = buffer[idx];
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
 
-		//					uint16_t allData = data2 << 8 | data;
+							uint16_t allData = data2 << 8 | data;
 
-		//					cout << +allData;
-		//				} else {
-		//					cout << +data;
-		//				}
-		//				break;
-		//			}
+							cout << +allData;
+						} else {
+							cout << +data;
+						}
+						break;
+					}
 
-		//			case 0b10000000: {
-		//				const char* ea = ea_calculation(rm);
+					case 0b10000000: {
+						const char* ea = ea_calculation(rm);
 						
-		//				idx++;
-		//				uint8_t byte3 = buffer[idx];
-		//				idx++;
-		//				uint8_t byte4 = buffer[idx];
+						idx++;
+						uint8_t byte3 = buffer[idx];
+						idx++;
+						uint8_t byte4 = buffer[idx];
 
-		//				uint16_t disp = (uint16_t)byte4 << 8 | byte3;
+						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
-		//				cout << "[" << ea << " + " << +disp << "], ";
+						cout << "[" << ea << " + " << +disp << "], ";
 
-		//				idx++;
-		//				uint8_t data = buffer[idx];
+						idx++;
+						uint8_t data = buffer[idx];
 
-		//				if (w == 1) {
-		//					idx++;
-		//					uint8_t data2 = buffer[idx];
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
 
-		//					uint16_t allData = data2 << 8 | data;
+							uint16_t allData = data2 << 8 | data;
 
-		//					cout << +allData;
-		//				} else {
-		//					cout << +data;
-		//				}
-		//				break;
-		//			}
+							cout << +allData;
+						} else {
+							cout << +data;
+						}
+						break;
+					}
 
-		//			case 0b11000000: {
-		//				const char* reg = get_register(rm, w);
+					case 0b11000000: {
+						const char* reg = get_register(rm, w);
 
-		//				cout << reg << ", "; 
+						cout << reg << ", "; 
 
-		//				idx++;
-		//				uint8_t data = buffer[idx];
+						idx++;
+						uint8_t data = buffer[idx];
 
-		//				if (w == 1) {
-		//					idx++;
-		//					uint8_t data2 = buffer[idx];
+						if (w == 1) {
+							idx++;
+							uint8_t data2 = buffer[idx];
 
-		//					uint16_t allData = data2 << 8 | data;
+							uint16_t allData = data2 << 8 | data;
 
-		//					cout << +allData;
-		//				} else {
-		//					cout << +data;
-		//				}						
+							cout << +allData;
+						} else {
+							cout << +data;
+						}						
 
-		//				break;
-		//			}
-		//		}
+						break;
+					}
+				}
 
-		//		idx++;
-		//		continue;
-		//	}
+				idx++;
+				continue;
+			}
 
 
 

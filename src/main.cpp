@@ -128,7 +128,7 @@ int main() {
 
 		//idx in the byte buffer
 		int idx = 0;
-		while (idx < 50) {
+		while (idx < 100) {
 			uint8_t byte 					= buffer[idx];
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
 			uint8_t imm_mov_code			= 0b11110000 & byte;
@@ -164,7 +164,7 @@ int main() {
 				uint8_t reg = (byte2 & 0b00111000) >> 3;
 				uint8_t rm	= byte2 & 0b00000111;
 				
-				uint8_t d = byte & 0b00000010 >> 1;
+				uint8_t d = (byte & 0b00000010) >> 1;
 				uint8_t w = byte & 0b00000001;
 
 				const char* asmOpCode;
@@ -197,13 +197,8 @@ int main() {
 						const char* ea 		= ea_calculation(rm);
 						const char* regis 	= get_register(reg, w);
 
-						const char* dest;
-						const char* src;
-
 						idx++;
 						uint8_t disp = buffer[idx];
-
-						cout << "xxx";
 
 						if (d == 1) {
 							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]" << endl;

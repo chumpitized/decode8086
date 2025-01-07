@@ -113,10 +113,9 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0039_more_movs", ios::in | ios::binary);
+    file.open("bin/listing_0041_add_sub_cmp_jnz", ios::in | ios::binary);
  
 	if (file) {
- 
 		file.seekg(0, file.end);
 		int length = file.tellg();
 		file.seekg(0, file.beg);
@@ -134,6 +133,29 @@ int main() {
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
 			uint8_t imm_mov_code			= 0b11110000 & byte;
 
+			if (mov_add_sub_cmp_code == 0b00000100) {
+				uint8_t w = byte & 0b00000001;
+
+				idx++;
+				uint8_t byte3 = buffer[idx];
+
+				cout << "add ";
+
+				if (w == 1) {
+					idx++;
+					uint8_t byte4 = buffer[idx];
+
+					uint16_t data = (uint16_t)byte4 << 8 | byte3;
+
+					cout << "ax, " << +data << endl;
+				} else {
+					cout << "al, " << +byte3 << endl;
+				}
+
+				idx++;
+				continue;
+			}
+
 			//add, sub, cmp
 			if (mov_add_sub_cmp_code == 0b00000000 || mov_add_sub_cmp_code == 0b00101000 || mov_add_sub_cmp_code == 0b00111000) {
 				idx++;
@@ -147,9 +169,9 @@ int main() {
 
 				const char* asmOpCode;
 
-				if (mov_add_sub_cmp_code == 0b00000000) asmOpCode = "add";
-				if (mov_add_sub_cmp_code == 0b00101000) asmOpCode = "sub";
-				if (mov_add_sub_cmp_code == 0b00111000) asmOpCode = "cmp";
+				if (mov_add_sub_cmp_code == 0b00000000) asmOpCode = "add ";
+				if (mov_add_sub_cmp_code == 0b00101000) asmOpCode = "sub ";
+				if (mov_add_sub_cmp_code == 0b00111000) asmOpCode = "cmp ";
 
 				cout << asmOpCode;
 
@@ -162,9 +184,9 @@ int main() {
 						const char* src;
 
 						if (d == 1) {
-							cout << regis << ", " << ea;
+							cout << regis << ", " << "[" << ea << "]";
 						} else {
-							cout << ea << ", " << regis;
+							cout << "[" << ea << "], " << regis;
 						}
 
 						break;
@@ -184,8 +206,9 @@ int main() {
 							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
 						} else {
 							cout << "[" << ea << " + " <<  +disp << "], " << regis;
-						}					
-						
+						}
+
+						break;
 					}
 
 					case 0b10000000: {
@@ -206,7 +229,9 @@ int main() {
 							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
 						} else {
 							cout << "[" << ea << " + " <<  +disp << "], " << regis;
-						}											
+						}
+						
+						break;
 					}
 
 					case 0b11000000: {						
@@ -249,11 +274,12 @@ int main() {
 						}
 
 						break;
-					}				
+					}
 				}
+
+				idx++;
+				continue;
 			}
-
-
 
 
 			//ADD, SUB, CMP immediate-to-register
@@ -324,6 +350,7 @@ int main() {
 						} else {
 							cout << +data;
 						}
+
 						break;
 					}
 
@@ -352,6 +379,7 @@ int main() {
 						} else {
 							cout << +data;
 						}
+
 						break;
 					}
 

@@ -128,7 +128,7 @@ int main() {
 
 		//idx in the byte buffer
 		int idx = 0;
-		while (idx < length) {
+		while (idx < 50) {
 			uint8_t byte 					= buffer[idx];
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
 			uint8_t imm_mov_code			= 0b11110000 & byte;
@@ -162,9 +162,9 @@ int main() {
 				uint8_t byte2 = buffer[idx];
 				uint8_t mod = (byte2 & 0b11000000) >> 6;
 				uint8_t reg = (byte2 & 0b00111000) >> 3;
-				uint8_t rm	= byte2 & 0b00000011;
+				uint8_t rm	= byte2 & 0b00000111;
 				
-				uint8_t d = byte & 0b00000010;
+				uint8_t d = byte & 0b00000010 >> 1;
 				uint8_t w = byte & 0b00000001;
 
 				const char* asmOpCode;
@@ -188,11 +188,12 @@ int main() {
 						} else {
 							cout << "[" << ea << "], " << regis;
 						}
+						cout << endl;
 
 						break;
 					}
 
-					case 0b01000000: {
+					case 0b00000001: {
 						const char* ea 		= ea_calculation(rm);
 						const char* regis 	= get_register(reg, w);
 
@@ -202,16 +203,18 @@ int main() {
 						idx++;
 						uint8_t disp = buffer[idx];
 
+						cout << "xxx";
+
 						if (d == 1) {
-							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
+							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]" << endl;
 						} else {
-							cout << "[" << ea << " + " <<  +disp << "], " << regis;
+							cout << "[" << ea << " + " <<  +disp << "], " << regis << endl;
 						}
 
 						break;
 					}
 
-					case 0b10000000: {
+					case 0b00000010: {
 						const char* ea 		= ea_calculation(rm);
 						const char* regis 	= get_register(reg, w);
 
@@ -226,15 +229,15 @@ int main() {
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 						if (d == 1) {
-							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]";
+							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]" << endl;;
 						} else {
-							cout << "[" << ea << " + " <<  +disp << "], " << regis;
+							cout << "[" << ea << " + " <<  +disp << "], " << regis << endl;
 						}
 						
 						break;
 					}
 
-					case 0b11000000: {						
+					case 0b00000011: {						
 						const char* src;
 						const char* dst;
 
@@ -251,12 +254,12 @@ int main() {
 								src = ea_calculation(rm);
 								dst = get_register(reg, w);
 
-								cout << dst << ", [" << src << " + " << disp << "]";
+								cout << dst << ", [" << src << " + " << +disp << "]" << endl;
 							} else {
 								src = get_register(reg, w);
 								dst = ea_calculation(rm);
 
-								cout << "[" << dst << " + " << disp << "], " << src << endl;
+								cout << "[" << dst << " + " << +disp << "], " << src << endl;
 							}
 						}
 						
@@ -290,7 +293,7 @@ int main() {
 				uint8_t byte2 			= buffer[idx];
 				uint8_t mod 			= (byte2 & 0b11000000) >> 6;
 				uint8_t w 				= (byte & 0b00000001);
-				uint8_t s 				= (byte & 0b00000010);
+				uint8_t s 				= (byte & 0b00000010) >> 1;
 				uint8_t rm 				= byte2 & 0b00000111;
 				const char* asmOpCode;
 
@@ -304,8 +307,8 @@ int main() {
 				//print op code
 				cout << asmOpCode;
 
-				if (w == 0b00000000) cout << "byte ";
-				else cout << "word ";
+				//if (w == 0b00000000) cout << "byte ";
+				//else cout << "word ";
 
 				switch (mod) {
 					case 0b00000000: {
@@ -315,7 +318,7 @@ int main() {
 						idx++;
 						uint8_t data = buffer[idx];						
 
-						if (w == 1) {
+						if (s == 0 && w == 1) {
 							idx++;
 							uint8_t data2 = buffer[idx];
 
@@ -325,11 +328,13 @@ int main() {
 						} else {
 							cout << +data;
 						}
+						 
+						cout << endl;
 
 						break;
 					}
 
-					case 0b01000000: {
+					case 0b00000001: {
 						const char* ea = ea_calculation(rm);
 
 						idx++;
@@ -340,7 +345,7 @@ int main() {
 						idx++;
 						uint8_t data = buffer[idx];
 
-						if (w == 1) {
+						if (s == 0 && w == 1) {
 							idx++;
 							uint8_t data2 = buffer[idx];
 
@@ -350,11 +355,12 @@ int main() {
 						} else {
 							cout << +data;
 						}
+						cout << endl;
 
 						break;
 					}
 
-					case 0b10000000: {
+					case 0b00000010: {
 						const char* ea = ea_calculation(rm);
 						
 						idx++;
@@ -369,7 +375,7 @@ int main() {
 						idx++;
 						uint8_t data = buffer[idx];
 
-						if (w == 1) {
+						if (s == 0 && w == 1) {
 							idx++;
 							uint8_t data2 = buffer[idx];
 
@@ -379,11 +385,12 @@ int main() {
 						} else {
 							cout << +data;
 						}
+						cout << endl;
 
 						break;
 					}
 
-					case 0b11000000: {
+					case 0b00000011: {
 						const char* reg = get_register(rm, w);
 
 						cout << reg << ", "; 
@@ -391,7 +398,7 @@ int main() {
 						idx++;
 						uint8_t data = buffer[idx];
 
-						if (w == 1) {
+						if (s == 0 && w == 1) {
 							idx++;
 							uint8_t data2 = buffer[idx];
 
@@ -400,7 +407,8 @@ int main() {
 							cout << +allData;
 						} else {
 							cout << +data;
-						}						
+						}
+						cout << endl;
 
 						break;
 					}
@@ -560,7 +568,7 @@ int main() {
 				continue;
 			}
 
-			//idx++;
+			idx++;
 		}
 	}
 

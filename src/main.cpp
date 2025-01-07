@@ -132,7 +132,7 @@ int main() {
 		while (idx < length) {
 			uint8_t byte 					= buffer[idx];
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
-			uint8_t imm_mov					= 0b11110000 & byte;
+			uint8_t imm_mov_code			= 0b11110000 & byte;
 
 			//add, sub, cmp
 			if (mov_add_sub_cmp_code == 0b00000000 || mov_add_sub_cmp_code == 0b00101000 || mov_add_sub_cmp_code == 0b00111000) {
@@ -209,18 +209,47 @@ int main() {
 						}											
 					}
 
-		//			case 0b11000000: {
-		//				if (rm == 0b00000110) {
+					case 0b11000000: {						
+						const char* src;
+						const char* dst;
+
+						//16-bit displacement
+						if (rm == 0b00000110) {
+							idx++;
+							uint8_t byte3 = buffer[idx];
+							idx++;
+							uint8_t byte4 = buffer[idx];
 							
+							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
-		//				}
+							if (d == 1) {
+								src = ea_calculation(rm);
+								dst = get_register(reg, w);
 
-		//			}
-					
+								cout << dst << ", [" << src << " + " << disp << "]";
+							} else {
+								src = get_register(reg, w);
+								dst = ea_calculation(rm);
 
+								cout << "[" << dst << " + " << disp << "], " << src << endl;
+							}
+						}
+						
+						else {
+							if (d == 1) {
+								src = get_register(rm, w);
+								dst = get_register(reg, w);
+							} else {
+								src = get_register(reg, w);
+								dst = get_register(rm, w);
+							}
 
+							cout << dst << ", " << src << endl;
 
+						}
 
+						break;
+					}				
 				}
 			}
 
@@ -478,7 +507,7 @@ int main() {
 
 
 			//immediate to register move
-			if (imm_mov == 0b10110000) {
+			if (imm_mov_code == 0b10110000) {
 				uint8_t w 	= (byte & 0b00001000) >> 3;
 				uint8_t reg = byte & 0b00000111;
 

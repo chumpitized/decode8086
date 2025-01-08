@@ -332,6 +332,7 @@ int main() {
 				continue;
 			}
 
+			//CMP may need special handling for sign extension bit...
 			//ADD, SUB, CMP immediate-to-register
 			if (mov_add_sub_cmp_code == 0b10000000) {
 				idx++;

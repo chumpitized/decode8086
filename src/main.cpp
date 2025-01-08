@@ -128,18 +128,30 @@ int main() {
 
 		//idx in the byte buffer
 		int idx = 0;
-		while (idx < 100) {
+		while (idx < length) {
 			uint8_t byte 					= buffer[idx];
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
 			uint8_t imm_mov_code			= 0b11110000 & byte;
+			uint8_t jump_code				= 0b11111111 & byte;
 
-			if (mov_add_sub_cmp_code == 0b00000100) {
+			if (jump_code == 0b01110101) {
+				idx++;
+				uint8_t byte2 = buffer[idx];
+
+				cout << "jnz " << +byte2 << endl;
+				idx++;
+				continue;
+			}
+
+			if (mov_add_sub_cmp_code == 0b00000100 || mov_add_sub_cmp_code == 0b00101100 || mov_add_sub_cmp_code == 0b00111100) {
 				uint8_t w = byte & 0b00000001;
 
 				idx++;
 				uint8_t byte3 = buffer[idx];
 
-				cout << "add ";
+				if (mov_add_sub_cmp_code == 0b00000100) cout << "add ";
+				if (mov_add_sub_cmp_code == 0b00101100) cout << "sub ";
+				if (mov_add_sub_cmp_code == 0b00111100) cout << "cmp ";
 
 				if (w == 1) {
 					idx++;

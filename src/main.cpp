@@ -32,8 +32,6 @@ const char* determine_register(Registers reg1, Registers reg2, uint8_t w) {
 	else return register_strings[reg1];
 }
 
-
-
 const char* get_register(uint8_t byte, uint8_t w) {
 	const char* reg;
 	
@@ -134,11 +132,54 @@ int main() {
 			uint8_t imm_mov_code			= 0b11110000 & byte;
 			uint8_t jump_code				= 0b11111111 & byte;
 
-			if (jump_code == 0b01110101) {
+			if (
+				jump_code == 0b01110100 ||
+				jump_code == 0b01111100 ||
+				jump_code == 0b01111110 ||
+				jump_code == 0b01110010 ||
+				jump_code == 0b01110110 ||
+				jump_code == 0b01111010 ||
+				jump_code == 0b01110000 ||
+				jump_code == 0b01111000 ||
+				jump_code == 0b01110101 ||
+				jump_code == 0b01111101 ||
+				jump_code == 0b01111111 ||
+				jump_code == 0b01110011 ||
+				jump_code == 0b01110111 ||
+				jump_code == 0b01111011 ||
+				jump_code == 0b01110001 ||
+				jump_code == 0b01111001 ||
+				jump_code == 0b11100010 ||
+				jump_code == 0b11100001 ||
+				jump_code == 0b11100000 ||
+				jump_code == 0b11100011
+			) {
+				if (jump_code == 0b01110100) cout << "je ";
+				if (jump_code == 0b01111100) cout << "jl ";
+				if (jump_code == 0b01111110) cout << "jle ";
+				if (jump_code == 0b01110010) cout << "jb ";
+				if (jump_code == 0b01110110) cout << "jbe ";
+				if (jump_code == 0b01111010) cout << "jp ";
+				if (jump_code == 0b01110000) cout << "jo ";
+				if (jump_code == 0b01111000) cout << "js ";
+				if (jump_code == 0b01110101) cout << "jne ";
+				if (jump_code == 0b01111101) cout << "jnl ";
+				if (jump_code == 0b01111111) cout << "jnle ";
+				if (jump_code == 0b01110011) cout << "jnb ";
+				if (jump_code == 0b01110111) cout << "jnbe ";
+				if (jump_code == 0b01111011) cout << "jnp ";
+				if (jump_code == 0b01110001) cout << "jno ";
+				if (jump_code == 0b01111001) cout << "jns ";
+				if (jump_code == 0b11100010) cout << "loop ";
+				if (jump_code == 0b11100001) cout << "loopz ";
+				if (jump_code == 0b11100000) cout << "loopnz ";
+				if (jump_code == 0b11100011) cout << "jcxz ";
+
 				idx++;
 				uint8_t byte2 = buffer[idx];
 
-				cout << "jnz " << +byte2 << endl;
+				cout << +byte2 << endl;
+
 				idx++;
 				continue;
 			}
@@ -291,11 +332,8 @@ int main() {
 				continue;
 			}
 
-
 			//ADD, SUB, CMP immediate-to-register
 			if (mov_add_sub_cmp_code == 0b10000000) {
-
-				//all 3
 				idx++;
 				uint8_t byte2 			= buffer[idx];
 				uint8_t mod 			= (byte2 & 0b11000000) >> 6;
@@ -304,18 +342,11 @@ int main() {
 				uint8_t rm 				= byte2 & 0b00000111;
 				const char* asmOpCode;
 
-				//Add
 				if ((byte2 & 0b00111000) == 0b00000000) asmOpCode = "add ";
-				//Sub
 				if ((byte2 & 0b00111000) == 0b00101000) asmOpCode = "sub ";
-				//Cmp
 				if ((byte2 & 0b00111000) == 0b00111000) asmOpCode = "cmp ";
 				
-				//print op code
 				cout << asmOpCode;
-
-				//if (w == 0b00000000) cout << "byte ";
-				//else cout << "word ";
 
 				switch (mod) {
 					case 0b00000000: {
@@ -323,7 +354,7 @@ int main() {
 						cout << "[" << ea << "], ";
 
 						idx++;
-						uint8_t data = buffer[idx];						
+						uint8_t data = buffer[idx];
 
 						if (s == 0 && w == 1) {
 							idx++;
@@ -425,29 +456,15 @@ int main() {
 				continue;
 			}
 
-
-
-
-
-
-
-
 			// Mov Register/memory to/from register
 			if (mov_add_sub_cmp_code == 0b10001000) {
-				//register/memory to memory/register move
-
 				uint8_t d = byte & 0b00000010;
 				uint8_t w = byte & 0b00000001;
 
 				idx++;
-				if (idx >= length) {
-					cout << "ERROR: TRIED PROCESSING INSTRUCTION BUT idx PASSED FILE LENGTH" << endl;
-					abort();
-				}
-
 				uint8_t byte2 	= buffer[idx];
 				uint8_t mod 	= byte2 & 0b11000000;
-				uint8_t reg		= (byte2 & 0b00111000) >> 3; //we shift these bits to make it easier to match against both reg and rm
+				uint8_t reg		= (byte2 & 0b00111000) >> 3;
 				uint8_t rm		= byte2 & 0b00000111;
 
 				const char* asmCode = get_asm_op_code(0b10001000);
@@ -546,8 +563,6 @@ int main() {
 				idx++;
 				continue;
 			}
-
-
 
 			//immediate to register move
 			if (imm_mov_code == 0b10110000) {

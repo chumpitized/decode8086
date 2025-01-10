@@ -3,6 +3,9 @@
 
 using namespace std;
 
+typedef uint8_t u8;
+typedef uint16_t u16;
+
 //reference manual: https://edge.edx.org/c4x/BITSPilani/EEE231/asset/8086_family_Users_Manual_1_.pdf
 
 uint16_t registers[8] = {
@@ -27,6 +30,17 @@ enum Registers {
 	di
 };
 
+uint16_t register_indexes[] {
+	0, 0, 0,
+	1, 1, 1,
+	2, 2, 2,
+	3, 3, 3,
+	4,
+	5,
+	6,
+	7
+};
+
 const char* register_strings[]{
 	"ah", "al", "ax",
 	"bh", "bl", "bx",
@@ -38,6 +52,8 @@ const char* register_strings[]{
 	"di"
 };
 
+//functions below can be consolidated to return the index in either
+//string or indexes arrays...
 const char* determine_register_name(Registers reg1, Registers reg2, uint8_t w) {
 	uint16_t reg = w == 1 ? reg2 : reg1;
 	return register_strings[reg];
@@ -45,16 +61,7 @@ const char* determine_register_name(Registers reg1, Registers reg2, uint8_t w) {
 
 uint16_t determine_register(Registers reg1, Registers reg2, uint8_t w) {
 	uint16_t reg = w == 1 ? reg2 : reg1;
-
-	if (reg < 3) 	return 0;
-	if (reg < 6) 	return 1;
-	if (reg < 9) 	return 2;
-	if (reg < 12) 	return 3;
-	if (reg == 12) 	return 4;
-	if (reg == 13)	return 5;
-	if (reg == 14) 	return 6;
-	if (reg == 15)	return 7;
-	return 0;
+	return register_indexes[reg];
 }
 
 uint16_t get_register_index(uint8_t byte, uint8_t w) {
@@ -158,7 +165,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0043_immediate_movs", ios::in | ios::binary);
+    file.open("bin/listing_0044_register_movs", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
@@ -594,15 +601,27 @@ int main() {
 					case 0b11000000: {
 						const char* src;
 						const char* dst;
+						uint16_t srcIndex;
+						uint16_t dstIndex;
 
 						if (d == 0b00000000) {
-							src = get_register_name(reg, w);
-							dst = get_register_name(rm, w);
+							src 		= get_register_name(reg, w);
+							srcIndex 	= get_register_index(reg, w);
+	
+							dst 		= get_register_name(rm, w);
+							dstIndex	= get_register_index(rm, w);
 						} else {
-							src = get_register_name(rm, w);
-							dst = get_register_name(reg, w);
+							src 		= get_register_name(rm, w);
+							srcIndex 	= get_register_index(rm, w);
+	
+							dst 		= get_register_name(reg, w);
+							dstIndex	= get_register_index(reg, w);
 						}
 
+						//perform the actual move
+						registers[dstIndex] = registers[srcIndex];
+
+						//print the asm instruction
 						cout << asmCode << " " << dst << ", " << src << endl;
 						break;
 					}

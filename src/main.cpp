@@ -5,6 +5,17 @@ using namespace std;
 
 //reference manual: https://edge.edx.org/c4x/BITSPilani/EEE231/asset/8086_family_Users_Manual_1_.pdf
 
+uint16_t registers[8] = {
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0
+};
+
 enum Registers {
 	ah, al, ax,
 	bh, bl, bx,
@@ -27,38 +38,74 @@ const char* register_strings[]{
 	"di"
 };
 
-const char* determine_register(Registers reg1, Registers reg2, uint8_t w) {
-	if (w == 0b00000001) return register_strings[reg2];
-	else return register_strings[reg1];
+const char* determine_register_name(Registers reg1, Registers reg2, uint8_t w) {
+	uint16_t reg = w == 1 ? reg2 : reg1;
+	return register_strings[reg];
 }
 
-const char* get_register(uint8_t byte, uint8_t w) {
+uint16_t determine_register(Registers reg1, Registers reg2, uint8_t w) {
+	uint16_t reg = w == 1 ? reg2 : reg1;
+
+	if (reg < 3) 	return 0;
+	if (reg < 6) 	return 1;
+	if (reg < 9) 	return 2;
+	if (reg < 12) 	return 3;
+	if (reg == 12) 	return 4;
+	if (reg == 13)	return 5;
+	if (reg == 14) 	return 6;
+	if (reg == 15)	return 7;
+	return 0;
+}
+
+uint16_t get_register_index(uint8_t byte, uint8_t w) {
+	switch(byte) {
+		case 0b00000000:
+			return determine_register(Registers::al, Registers::ax, w);
+		case 0b00000001:            
+			return determine_register(Registers::cl, Registers::cx, w);
+		case 0b00000010:            
+			return determine_register(Registers::dl, Registers::dx, w);
+		case 0b00000011:            
+			return determine_register(Registers::bl, Registers::bx, w);
+		case 0b00000100:            
+			return determine_register(Registers::ah, Registers::sp, w);
+		case 0b00000101:            
+			return determine_register(Registers::ch, Registers::bp, w);
+		case 0b00000110:            
+			return determine_register(Registers::dh, Registers::si, w);
+		case 0b00000111:            
+			return determine_register(Registers::bh, Registers::di, w);
+	}
+	return 0;
+}
+
+const char* get_register_name(uint8_t byte, uint8_t w) {
 	const char* reg;
 	
 	switch(byte) {
 		case 0b00000000:
-			reg = determine_register(Registers::al, Registers::ax, w);
+			reg = determine_register_name(Registers::al, Registers::ax, w);
 			break;
 		case 0b00000001:
-			reg = determine_register(Registers::cl, Registers::cx, w);
+			reg = determine_register_name(Registers::cl, Registers::cx, w);
 			break;
 		case 0b00000010:
-			reg = determine_register(Registers::dl, Registers::dx, w);
+			reg = determine_register_name(Registers::dl, Registers::dx, w);
 			break;
 		case 0b00000011:
-			reg = determine_register(Registers::bl, Registers::bx, w);
+			reg = determine_register_name(Registers::bl, Registers::bx, w);
 			break;
 		case 0b00000100:
-			reg = determine_register(Registers::ah, Registers::sp, w);
+			reg = determine_register_name(Registers::ah, Registers::sp, w);
 			break;
 		case 0b00000101:
-			reg = determine_register(Registers::ch, Registers::bp, w);
+			reg = determine_register_name(Registers::ch, Registers::bp, w);
 			break;
 		case 0b00000110:
-			reg = determine_register(Registers::dh, Registers::si, w);
+			reg = determine_register_name(Registers::dh, Registers::si, w);
 			break;
 		case 0b00000111:
-			reg = determine_register(Registers::bh, Registers::di, w);
+			reg = determine_register_name(Registers::bh, Registers::di, w);
 			break;
 	}
 	return reg;
@@ -111,7 +158,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0041_add_sub_cmp_jnz", ios::in | ios::binary);
+    file.open("bin/listing_0043_immediate_movs", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
@@ -231,7 +278,7 @@ int main() {
 				switch (mod) {
 					case 0b00000000: {
 						const char* ea 		= ea_calculation(rm);
-						const char* regis 	= get_register(reg, w);
+						const char* regis 	= get_register_name(reg, w);
 
 						const char* dest;
 						const char* src;
@@ -248,7 +295,7 @@ int main() {
 
 					case 0b00000001: {
 						const char* ea 		= ea_calculation(rm);
-						const char* regis 	= get_register(reg, w);
+						const char* regis 	= get_register_name(reg, w);
 
 						idx++;
 						uint8_t disp = buffer[idx];
@@ -264,7 +311,7 @@ int main() {
 
 					case 0b00000010: {
 						const char* ea 		= ea_calculation(rm);
-						const char* regis 	= get_register(reg, w);
+						const char* regis 	= get_register_name(reg, w);
 
 						const char* dest;
 						const char* src;
@@ -300,11 +347,11 @@ int main() {
 
 							if (d == 1) {
 								src = ea_calculation(rm);
-								dst = get_register(reg, w);
+								dst = get_register_name(reg, w);
 
 								cout << dst << ", [" << src << " + " << +disp << "]" << endl;
 							} else {
-								src = get_register(reg, w);
+								src = get_register_name(reg, w);
 								dst = ea_calculation(rm);
 
 								cout << "[" << dst << " + " << +disp << "], " << src << endl;
@@ -313,11 +360,11 @@ int main() {
 						
 						else {
 							if (d == 1) {
-								src = get_register(rm, w);
-								dst = get_register(reg, w);
+								src = get_register_name(rm, w);
+								dst = get_register_name(reg, w);
 							} else {
-								src = get_register(reg, w);
-								dst = get_register(rm, w);
+								src = get_register_name(reg, w);
+								dst = get_register_name(rm, w);
 							}
 
 							cout << dst << ", " << src << endl;
@@ -430,7 +477,7 @@ int main() {
 					}
 
 					case 0b00000011: {
-						const char* reg = get_register(rm, w);
+						const char* reg = get_register_name(rm, w);
 
 						cout << reg << ", "; 
 
@@ -474,7 +521,7 @@ int main() {
 					//No displacement, except when RM == 110 (then 16-bit disp.)
 					case 0b00000000: {
 						const char* ea = ea_calculation(rm);
-						const char* movRegister = get_register(reg, w);
+						const char* movRegister = get_register_name(reg, w);
 					
 						//do 16-bit displacement
 						if (rm == 0b00000110) {
@@ -511,7 +558,7 @@ int main() {
 						uint8_t byte3 = buffer[idx];
 
 						const char* ea = ea_calculation(rm);
-						const char* movRegister = get_register(reg, w);
+						const char* movRegister = get_register_name(reg, w);
 
 						if (d == 0b00000010) {
 							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
@@ -532,7 +579,7 @@ int main() {
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 						const char* ea = ea_calculation(rm);
-						const char* movRegister = get_register(reg, w);		
+						const char* movRegister = get_register_name(reg, w);		
 
 						if (d == 0b00000010) {							
 							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;  
@@ -549,11 +596,11 @@ int main() {
 						const char* dst;
 
 						if (d == 0b00000000) {
-							src = get_register(reg, w);
-							dst = get_register(rm, w);
+							src = get_register_name(reg, w);
+							dst = get_register_name(rm, w);
 						} else {
-							src = get_register(rm, w);
-							dst = get_register(reg, w);
+							src = get_register_name(rm, w);
+							dst = get_register_name(reg, w);
 						}
 
 						cout << asmCode << " " << dst << ", " << src << endl;
@@ -571,8 +618,8 @@ int main() {
 				uint8_t reg = byte & 0b00000111;
 
 				const char* asmCode =  get_asm_op_code(0b10110000);
-
-				const char* dst = get_register(reg, w);
+				const char* dst = get_register_name(reg, w);
+				uint16_t regIndex = get_register_index(reg, w);
 
 				idx++;
 				uint8_t byte2 = buffer[idx];
@@ -581,6 +628,8 @@ int main() {
 					idx++;
 					uint8_t byte3 = buffer[idx];
 					uint16_t disp = (uint16_t)byte3 << 8 | byte2;
+
+					registers[regIndex] = disp;
 
 					cout << asmCode << " " << dst << ", " << disp << endl;
 				} else {
@@ -593,6 +642,10 @@ int main() {
 
 			idx++;
 		}
+	}
+
+	for (int i = 0; i < 8; ++i) {
+		cout << i << " : " << registers[i] << endl;
 	}
 
     return 0;

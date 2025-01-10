@@ -41,7 +41,7 @@ uint16_t register_indexes[] {
 	7
 };
 
-const char* register_strings[]{
+const char* register_names[]{
 	"ah", "al", "ax",
 	"bh", "bl", "bx",
 	"ch", "cl", "cx",
@@ -52,70 +52,22 @@ const char* register_strings[]{
 	"di"
 };
 
-//functions below can be consolidated to return the index in either
-//string or indexes arrays...
-const char* determine_register_name(Registers reg1, Registers reg2, uint8_t w) {
-	uint16_t reg = w == 1 ? reg2 : reg1;
-	return register_strings[reg];
-}
-
 uint16_t determine_register(Registers reg1, Registers reg2, uint8_t w) {
-	uint16_t reg = w == 1 ? reg2 : reg1;
-	return register_indexes[reg];
+	return w == 1 ? reg2 : reg1;
 }
 
-uint16_t get_register_index(uint8_t byte, uint8_t w) {
-	switch(byte) {
-		case 0b00000000:
-			return determine_register(Registers::al, Registers::ax, w);
-		case 0b00000001:            
-			return determine_register(Registers::cl, Registers::cx, w);
-		case 0b00000010:            
-			return determine_register(Registers::dl, Registers::dx, w);
-		case 0b00000011:            
-			return determine_register(Registers::bl, Registers::bx, w);
-		case 0b00000100:            
-			return determine_register(Registers::ah, Registers::sp, w);
-		case 0b00000101:            
-			return determine_register(Registers::ch, Registers::bp, w);
-		case 0b00000110:            
-			return determine_register(Registers::dh, Registers::si, w);
-		case 0b00000111:            
-			return determine_register(Registers::bh, Registers::di, w);
+uint16_t get_register_indexes(uint8_t byte, uint8_t w) {
+	switch (byte) {
+		case 0b00000000: return determine_register(Registers::al, Registers::ax, w);
+		case 0b00000001: return determine_register(Registers::cl, Registers::cx, w);
+		case 0b00000010: return determine_register(Registers::dl, Registers::dx, w);
+		case 0b00000011: return determine_register(Registers::bl, Registers::bx, w);
+		case 0b00000100: return determine_register(Registers::ah, Registers::sp, w);
+		case 0b00000101: return determine_register(Registers::ch, Registers::bp, w);
+		case 0b00000110: return determine_register(Registers::dh, Registers::si, w);
+		case 0b00000111: return determine_register(Registers::bh, Registers::di, w);
+		default: return 0;
 	}
-	return 0;
-}
-
-const char* get_register_name(uint8_t byte, uint8_t w) {
-	const char* reg;
-	
-	switch(byte) {
-		case 0b00000000:
-			reg = determine_register_name(Registers::al, Registers::ax, w);
-			break;
-		case 0b00000001:
-			reg = determine_register_name(Registers::cl, Registers::cx, w);
-			break;
-		case 0b00000010:
-			reg = determine_register_name(Registers::dl, Registers::dx, w);
-			break;
-		case 0b00000011:
-			reg = determine_register_name(Registers::bl, Registers::bx, w);
-			break;
-		case 0b00000100:
-			reg = determine_register_name(Registers::ah, Registers::sp, w);
-			break;
-		case 0b00000101:
-			reg = determine_register_name(Registers::ch, Registers::bp, w);
-			break;
-		case 0b00000110:
-			reg = determine_register_name(Registers::dh, Registers::si, w);
-			break;
-		case 0b00000111:
-			reg = determine_register_name(Registers::bh, Registers::di, w);
-			break;
-	}
-	return reg;
 }
 
 const char* get_asm_op_code(uint8_t opcode) {
@@ -165,7 +117,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0044_register_movs", ios::in | ios::binary);
+    file.open("bin/listing_0043_immediate_movs", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
@@ -285,15 +237,16 @@ int main() {
 				switch (mod) {
 					case 0b00000000: {
 						const char* ea 		= ea_calculation(rm);
-						const char* regis 	= get_register_name(reg, w);
+						uint16_t regIdx 	= get_register_indexes(reg, w);
+						const char* regName = register_names[regIdx];
 
 						const char* dest;
 						const char* src;
 
 						if (d == 1) {
-							cout << regis << ", " << "[" << ea << "]";
+							cout << regName << ", " << "[" << ea << "]";
 						} else {
-							cout << "[" << ea << "], " << regis;
+							cout << "[" << ea << "], " << regName;
 						}
 						cout << endl;
 
@@ -302,15 +255,16 @@ int main() {
 
 					case 0b00000001: {
 						const char* ea 		= ea_calculation(rm);
-						const char* regis 	= get_register_name(reg, w);
+						uint16_t regIdx 	= get_register_indexes(reg, w);
+						const char* regName = register_names[regIdx];
 
 						idx++;
 						uint8_t disp = buffer[idx];
 
 						if (d == 1) {
-							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]" << endl;
+							cout << regName << ", " << "[" << ea << " + " <<  +disp << "]" << endl;
 						} else {
-							cout << "[" << ea << " + " <<  +disp << "], " << regis << endl;
+							cout << "[" << ea << " + " <<  +disp << "], " << regName << endl;
 						}
 
 						break;
@@ -318,7 +272,8 @@ int main() {
 
 					case 0b00000010: {
 						const char* ea 		= ea_calculation(rm);
-						const char* regis 	= get_register_name(reg, w);
+						uint16_t regIdx 	= get_register_indexes(reg, w);
+						const char* regName = register_names[regIdx];
 
 						const char* dest;
 						const char* src;
@@ -331,9 +286,9 @@ int main() {
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 						if (d == 1) {
-							cout << regis << ", " << "[" << ea << " + " <<  +disp << "]" << endl;;
+							cout << regName << ", " << "[" << ea << " + " <<  +disp << "]" << endl;;
 						} else {
-							cout << "[" << ea << " + " <<  +disp << "], " << regis << endl;
+							cout << "[" << ea << " + " <<  +disp << "], " << regName << endl;
 						}
 						
 						break;
@@ -353,12 +308,16 @@ int main() {
 							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 							if (d == 1) {
+								uint16_t regIdx = get_register_indexes(reg, w);
+
 								src = ea_calculation(rm);
-								dst = get_register_name(reg, w);
+								dst = register_names[regIdx];
 
 								cout << dst << ", [" << src << " + " << +disp << "]" << endl;
 							} else {
-								src = get_register_name(reg, w);
+								uint16_t regIdx = get_register_indexes(rm, w);
+
+								src = register_names[regIdx];
 								dst = ea_calculation(rm);
 
 								cout << "[" << dst << " + " << +disp << "], " << src << endl;
@@ -367,11 +326,17 @@ int main() {
 						
 						else {
 							if (d == 1) {
-								src = get_register_name(rm, w);
-								dst = get_register_name(reg, w);
+								uint16_t reg1Idx = get_register_indexes(rm, w);
+								uint16_t reg2Idx = get_register_indexes(reg, w);
+
+								src = register_names[reg1Idx];
+								dst = register_names[reg2Idx];
 							} else {
-								src = get_register_name(reg, w);
-								dst = get_register_name(rm, w);
+								uint16_t reg1Idx = get_register_indexes(reg, w);
+								uint16_t reg2Idx = get_register_indexes(rm, w);
+
+								src = register_names[reg1Idx];
+								dst = register_names[reg2Idx];
 							}
 
 							cout << dst << ", " << src << endl;
@@ -484,9 +449,10 @@ int main() {
 					}
 
 					case 0b00000011: {
-						const char* reg = get_register_name(rm, w);
+						uint16_t regIdx 	= get_register_indexes(rm, w);
+						const char* regName = register_names[regIdx];
 
-						cout << reg << ", "; 
+						cout << regName << ", "; 
 
 						idx++;
 						uint8_t data = buffer[idx];
@@ -527,8 +493,9 @@ int main() {
 				switch (mod) {
 					//No displacement, except when RM == 110 (then 16-bit disp.)
 					case 0b00000000: {
-						const char* ea = ea_calculation(rm);
-						const char* movRegister = get_register_name(reg, w);
+						const char* ea 			= ea_calculation(rm);
+						uint16_t regIdx 		= get_register_indexes(reg, w);
+						const char* movRegister = register_names[regIdx];
 					
 						//do 16-bit displacement
 						if (rm == 0b00000110) {
@@ -565,7 +532,8 @@ int main() {
 						uint8_t byte3 = buffer[idx];
 
 						const char* ea = ea_calculation(rm);
-						const char* movRegister = get_register_name(reg, w);
+						uint16_t regIdx = get_register_indexes(reg, w);
+						const char* movRegister = register_names[regIdx];
 
 						if (d == 0b00000010) {
 							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
@@ -585,8 +553,9 @@ int main() {
 
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
-						const char* ea = ea_calculation(rm);
-						const char* movRegister = get_register_name(reg, w);		
+						const char* ea 			= ea_calculation(rm);
+						uint16_t regIdx 		= get_register_indexes(reg, w);
+						const char* movRegister = register_names[regIdx];		
 
 						if (d == 0b00000010) {							
 							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;  
@@ -605,17 +574,17 @@ int main() {
 						uint16_t dstIndex;
 
 						if (d == 0b00000000) {
-							src 		= get_register_name(reg, w);
-							srcIndex 	= get_register_index(reg, w);
+							srcIndex 	= get_register_indexes(reg, w);
+							src 		= register_names[srcIndex];
 	
-							dst 		= get_register_name(rm, w);
-							dstIndex	= get_register_index(rm, w);
+							dstIndex	= get_register_indexes(rm, w);
+							dst 		= register_names[dstIndex];
 						} else {
-							src 		= get_register_name(rm, w);
-							srcIndex 	= get_register_index(rm, w);
-	
-							dst 		= get_register_name(reg, w);
-							dstIndex	= get_register_index(reg, w);
+							srcIndex 	= get_register_indexes(rm, w);
+							src 		= register_names[srcIndex];
+							
+							dstIndex	= get_register_indexes(reg, w);
+							dst 		= register_names[dstIndex];
 						}
 
 						//perform the actual move
@@ -637,8 +606,10 @@ int main() {
 				uint8_t reg = byte & 0b00000111;
 
 				const char* asmCode =  get_asm_op_code(0b10110000);
-				const char* dst = get_register_name(reg, w);
-				uint16_t regIndex = get_register_index(reg, w);
+
+				uint16_t regIdx 	= get_register_indexes(reg, w);
+				uint16_t regAddr	= register_indexes[regIdx];
+				const char* dst 	= register_names[regIdx];
 
 				idx++;
 				uint8_t byte2 = buffer[idx];
@@ -648,7 +619,7 @@ int main() {
 					uint8_t byte3 = buffer[idx];
 					uint16_t disp = (uint16_t)byte3 << 8 | byte2;
 
-					registers[regIndex] = disp;
+					registers[regAddr] = disp;
 
 					cout << asmCode << " " << dst << ", " << disp << endl;
 				} else {

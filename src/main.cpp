@@ -52,7 +52,19 @@ const char* register_names[]{
 	"di"
 };
 
-uint16_t determine_register(Registers reg1, Registers reg2, uint8_t w) {
+//used by reg and rm values (0-7)
+const char* effective_addresses[] {
+	"bx + si",
+	"bx + di",
+	"bp + si",
+	"bp + di",
+	"si",
+	"di",
+	"bp",
+	"bx"
+};
+
+inline uint16_t determine_register(Registers reg1, Registers reg2, uint8_t w) {
 	return w == 1 ? reg2 : reg1;
 }
 
@@ -117,20 +129,18 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0043_immediate_movs", ios::in | ios::binary);
+    file.open("bin/listing_0044_register_movs", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
 		int length = file.tellg();
 		file.seekg(0, file.beg);
 
-		//stack-allocated array
 		uint8_t buffer[length];
  
 		file.read(reinterpret_cast<char*>(buffer), length);
 		file.close();
 
-		//idx in the byte buffer
 		int idx = 0;
 		while (idx < length) {
 			uint8_t byte 					= buffer[idx];
@@ -194,7 +204,7 @@ int main() {
 				uint8_t w = byte & 0b00000001;
 
 				idx++;
-				uint8_t byte3 = buffer[idx];
+				uint8_t byte2 = buffer[idx];
 
 				if (mov_add_sub_cmp_code == 0b00000100) cout << "add ";
 				if (mov_add_sub_cmp_code == 0b00101100) cout << "sub ";
@@ -202,13 +212,13 @@ int main() {
 
 				if (w == 1) {
 					idx++;
-					uint8_t byte4 = buffer[idx];
+					uint8_t byte3 = buffer[idx];
 
-					uint16_t data = (uint16_t)byte4 << 8 | byte3;
+					uint16_t data = (uint16_t)byte3 << 8 | byte2;
 
 					cout << "ax, " << +data << endl;
 				} else {
-					cout << "al, " << +byte3 << endl;
+					cout << "al, " << +byte2 << endl;
 				}
 
 				idx++;
@@ -588,7 +598,7 @@ int main() {
 						}
 
 						//perform the actual move
-						registers[dstIndex] = registers[srcIndex];
+						registers[register_indexes[dstIndex]] = registers[register_indexes[srcIndex]];
 
 						//print the asm instruction
 						cout << asmCode << " " << dst << ", " << src << endl;

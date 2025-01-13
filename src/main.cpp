@@ -6,6 +6,9 @@ using namespace std;
 typedef uint8_t u8;
 typedef uint16_t u16;
 
+
+uint16_t FLAGS = 0;
+
 //reference manual: https://edge.edx.org/c4x/BITSPilani/EEE231/asset/8086_family_Users_Manual_1_.pdf
 
 uint16_t registers[8] = {
@@ -84,14 +87,52 @@ uint16_t get_register_indexes(uint8_t byte, uint8_t w) {
 
 const char* get_asm_op_code(uint8_t opcode) {
 	switch(opcode) {
+		case 0b01110100:
+			return "je";
+		case 0b01111100:
+			return "jl";
+		case 0b01111110:
+			return "jle";
+		case 0b01110010:
+			return "jb";
+		case 0b01110110:
+			return "jbe";
+		case 0b01111010:
+			return "jp";
+		case 0b01110000:
+			return "jo";
+		case 0b01111000:
+			return "js";
+		case 0b01110101:
+			return "jne";
+		case 0b01111101:
+			return "jnl";
+		case 0b01111111:
+			return "jnle";
+		case 0b01110011:
+			return "jnb";
+		case 0b01110111:
+			return "jnbe";
+		case 0b01111011:
+			return "jnp";
+		case 0b01110001:
+			return "jno";
+		case 0b01111001:
+			return "jns";
+		case 0b11100010:
+			return "loop";
+		case 0b11100001:
+			return "loopz";
+		case 0b11100000:
+			return "loopnz";
+		case 0b11100011:
+			return "jcxz";
 		case 0b10001000:
 			return "mov";
-			break;
 		case 0b10110000:
 			return "mov";
-			break;
 		default:
-			cout << "OPCODE WASN'T 100010" << endl;
+			cout << "OPCODE NOT FOUND" << endl;
 			abort();
 	}
 }
@@ -170,26 +211,7 @@ int main() {
 				jump_code == 0b11100000 ||
 				jump_code == 0b11100011
 			) {
-				if (jump_code == 0b01110100) cout << "je ";
-				if (jump_code == 0b01111100) cout << "jl ";
-				if (jump_code == 0b01111110) cout << "jle ";
-				if (jump_code == 0b01110010) cout << "jb ";
-				if (jump_code == 0b01110110) cout << "jbe ";
-				if (jump_code == 0b01111010) cout << "jp ";
-				if (jump_code == 0b01110000) cout << "jo ";
-				if (jump_code == 0b01111000) cout << "js ";
-				if (jump_code == 0b01110101) cout << "jne ";
-				if (jump_code == 0b01111101) cout << "jnl ";
-				if (jump_code == 0b01111111) cout << "jnle ";
-				if (jump_code == 0b01110011) cout << "jnb ";
-				if (jump_code == 0b01110111) cout << "jnbe ";
-				if (jump_code == 0b01111011) cout << "jnp ";
-				if (jump_code == 0b01110001) cout << "jno ";
-				if (jump_code == 0b01111001) cout << "jns ";
-				if (jump_code == 0b11100010) cout << "loop ";
-				if (jump_code == 0b11100001) cout << "loopz ";
-				if (jump_code == 0b11100000) cout << "loopnz ";
-				if (jump_code == 0b11100011) cout << "jcxz ";
+				cout << get_asm_op_code(byte) << " ";
 
 				idx++;
 				uint8_t byte2 = buffer[idx];

@@ -170,7 +170,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0044_register_movs", ios::in | ios::binary);
+    file.open("bin/listing_0046_add_sub_cmp", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
@@ -235,8 +235,14 @@ int main() {
 				if (w == 1) {
 					idx++;
 					uint8_t byte3 = buffer[idx];
-
 					uint16_t data = (uint16_t)byte3 << 8 | byte2;
+
+					Registers ax 	= Registers::ax;
+					int axAddr 		= register_indexes[ax];				
+					
+					if (mov_add_sub_cmp_code == 0b00000100) registers[axAddr] += data;
+					if (mov_add_sub_cmp_code == 0b00101100) registers[axAddr] -= data;
+					if (mov_add_sub_cmp_code == 0b00111100) registers[axAddr] - data;
 
 					cout << "ax, " << +data << endl;
 				} else {
@@ -357,19 +363,26 @@ int main() {
 						}
 						
 						else {
+							uint16_t srcIdx;
+							uint16_t dstIdx;
+
 							if (d == 1) {
-								uint16_t reg1Idx = get_register_indexes(rm, w);
-								uint16_t reg2Idx = get_register_indexes(reg, w);
+								srcIdx	= get_register_indexes(rm, w);
+								dstIdx	= get_register_indexes(reg, w);
 
-								src = register_names[reg1Idx];
-								dst = register_names[reg2Idx];
+								src 	= register_names[srcIdx];
+								dst 	= register_names[dstIdx];
 							} else {
-								uint16_t reg1Idx = get_register_indexes(reg, w);
-								uint16_t reg2Idx = get_register_indexes(rm, w);
+								srcIdx 	= get_register_indexes(reg, w);
+								dstIdx 	= get_register_indexes(rm, w);
 
-								src = register_names[reg1Idx];
-								dst = register_names[reg2Idx];
+								src 	= register_names[srcIdx];
+								dst 	= register_names[dstIdx];
 							}
+
+							if (mov_add_sub_cmp_code == 0b00000000) registers[dstIdx] += registers[srcIdx];
+							if (mov_add_sub_cmp_code == 0b00101000) registers[dstIdx] -= registers[srcIdx];
+							if (mov_add_sub_cmp_code == 0b00111000) registers[dstIdx] - registers[srcIdx];
 
 							cout << dst << ", " << src << endl;
 
@@ -383,7 +396,6 @@ int main() {
 				continue;
 			}
 
-			//CMP may need special handling for sign extension bit...
 			//ADD, SUB, CMP immediate-to-register
 			if (mov_add_sub_cmp_code == 0b10000000) {
 				idx++;
@@ -492,8 +504,11 @@ int main() {
 						if (s == 0 && w == 1) {
 							idx++;
 							uint8_t data2 = buffer[idx];
-
 							uint16_t allData = data2 << 8 | data;
+
+							if (mov_add_sub_cmp_code == 0b00000000) registers[regIdx] += data;
+							if (mov_add_sub_cmp_code == 0b00101000) registers[regIdx] -= data;
+							if (mov_add_sub_cmp_code == 0b00111000) registers[regIdx] - data;
 
 							cout << +allData;
 						} else {

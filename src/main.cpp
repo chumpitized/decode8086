@@ -363,21 +363,27 @@ int main() {
 						}
 						
 						else {
+							uint16_t srcReg;
+							uint16_t dstReg;
 							uint16_t srcIdx;
 							uint16_t dstIdx;
 
 							if (d == 1) {
-								srcIdx	= get_register_indexes(rm, w);
-								dstIdx	= get_register_indexes(reg, w);
+								srcReg	= get_register_indexes(rm, w);
+								srcIdx 	= register_indexes[srcReg];
+								dstReg	= get_register_indexes(reg, w);
+								dstIdx	= register_indexes[dstReg];
 
-								src 	= register_names[srcIdx];
-								dst 	= register_names[dstIdx];
+								src 	= register_names[srcReg];
+								dst 	= register_names[dstReg];
 							} else {
-								srcIdx 	= get_register_indexes(reg, w);
-								dstIdx 	= get_register_indexes(rm, w);
+								srcReg 	= get_register_indexes(reg, w);
+								srcIdx	= register_indexes[srcReg];
+								dstReg	= get_register_indexes(rm, w);
+								dstIdx 	= register_indexes[dstReg];
 
-								src 	= register_names[srcIdx];
-								dst 	= register_names[dstIdx];
+								src 	= register_names[srcReg];
+								dst 	= register_names[dstReg];
 							}
 
 							if (mov_add_sub_cmp_code == 0b00000000) registers[dstIdx] += registers[srcIdx];
@@ -493,8 +499,9 @@ int main() {
 					}
 
 					case 0b00000011: {
-						uint16_t regIdx 	= get_register_indexes(rm, w);
-						const char* regName = register_names[regIdx];
+						uint16_t regNameIdx = get_register_indexes(rm, w);
+						uint16_t regIdx		= register_indexes[regNameIdx];
+						const char* regName = register_names[regNameIdx];
 
 						cout << regName << ", "; 
 
@@ -506,9 +513,9 @@ int main() {
 							uint8_t data2 = buffer[idx];
 							uint16_t allData = data2 << 8 | data;
 
-							if (mov_add_sub_cmp_code == 0b00000000) registers[regIdx] += data;
-							if (mov_add_sub_cmp_code == 0b00101000) registers[regIdx] -= data;
-							if (mov_add_sub_cmp_code == 0b00111000) registers[regIdx] - data;
+							if ((byte2 & 0b00111000) == 0b00000000) registers[regIdx] += allData;
+							if ((byte2 & 0b00111000) == 0b00101000) registers[regIdx] -= allData;
+							if ((byte2 & 0b00111000) == 0b00111000) registers[regIdx] - allData;
 
 							cout << +allData;
 						} else {

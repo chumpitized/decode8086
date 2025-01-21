@@ -6,8 +6,8 @@ using namespace std;
 typedef uint8_t u8;
 typedef uint16_t u16;
 
-
-uint16_t FLAGS = 0;
+bool zero_flag = false;
+bool sign_flag = false;
 
 //reference manual: https://edge.edx.org/c4x/BITSPilani/EEE231/asset/8086_family_Users_Manual_1_.pdf
 
@@ -238,10 +238,26 @@ int main() {
 					uint16_t data = (uint16_t)byte3 << 8 | byte2;
 
 					Registers ax 	= Registers::ax;
-					int axAddr 		= register_indexes[ax];				
-					
-					if (mov_add_sub_cmp_code == 0b00000100) registers[axAddr] += data;
-					if (mov_add_sub_cmp_code == 0b00101100) registers[axAddr] -= data;
+					int axAddr 		= register_indexes[ax];								
+
+					if (mov_add_sub_cmp_code == 0b00000100) {
+						registers[axAddr] += data;
+
+						if (registers[axAddr] == 0) zero_flag = true;
+						else zero_flag = false;
+
+						if ((registers[axAddr] & 0x8000) == 0x8000) sign_flag = true;
+						else sign_flag = false;
+					}
+					if (mov_add_sub_cmp_code == 0b00101100) {
+						registers[axAddr] -= data;
+
+						if (registers[axAddr] == 0) zero_flag = true;
+						else zero_flag = false;
+
+						if ((registers[axAddr] & 0x8000) == 0x8000) sign_flag = true;
+						else sign_flag = false;
+					}
 					if (mov_add_sub_cmp_code == 0b00111100) registers[axAddr] - data;
 
 					cout << "ax, " << +data << endl;
@@ -386,8 +402,26 @@ int main() {
 								dst 	= register_names[dstReg];
 							}
 
-							if (mov_add_sub_cmp_code == 0b00000000) registers[dstIdx] += registers[srcIdx];
-							if (mov_add_sub_cmp_code == 0b00101000) registers[dstIdx] -= registers[srcIdx];
+							if (mov_add_sub_cmp_code == 0b00000000) {
+								registers[dstIdx] += registers[srcIdx];
+
+								if (registers[dstIdx] == 0) zero_flag = true;
+								else zero_flag = false;
+
+								if ((registers[dstIdx] & 0x8000) == 0x8000) sign_flag = true;
+								else sign_flag = false;
+							}
+
+							if (mov_add_sub_cmp_code == 0b00101000) {								
+								registers[dstIdx] -= registers[srcIdx];
+
+								if (registers[dstIdx] == 0) zero_flag = true;
+								else zero_flag = false;
+
+								if ((registers[dstIdx] & 0x8000) == 0x8000) sign_flag = true;
+								else sign_flag = false;
+							}
+
 							if (mov_add_sub_cmp_code == 0b00111000) registers[dstIdx] - registers[srcIdx];
 
 							cout << dst << ", " << src << endl;
@@ -513,8 +547,24 @@ int main() {
 							uint8_t data2 = buffer[idx];
 							uint16_t allData = data2 << 8 | data;
 
-							if ((byte2 & 0b00111000) == 0b00000000) registers[regIdx] += allData;
-							if ((byte2 & 0b00111000) == 0b00101000) registers[regIdx] -= allData;
+							if ((byte2 & 0b00111000) == 0b00000000) {
+								registers[regIdx] += allData;
+
+								if (registers[regIdx] == 0) zero_flag = true;
+								else zero_flag = false;
+
+								if ((registers[regIdx] & 0x8000) == 0x8000) sign_flag = true;
+								else sign_flag = false;
+							}
+							if ((byte2 & 0b00111000) == 0b00101000) {
+								registers[regIdx] -= allData;
+								
+								if (registers[regIdx] == 0) zero_flag = true;
+								else zero_flag = false;
+
+								if ((registers[regIdx] & 0x8000) == 0x8000) sign_flag = true;
+								else sign_flag = false;
+							}
 							if ((byte2 & 0b00111000) == 0b00111000) registers[regIdx] - allData;
 
 							cout << +allData;
@@ -691,6 +741,9 @@ int main() {
 	for (int i = 0; i < 8; ++i) {
 		cout << i << " : " << registers[i] << endl;
 	}
+	 
+	cout << "Sign Flag: " << sign_flag << endl;
+	cout << "Zero Flag: " << zero_flag << endl;
 
     return 0;
 }

@@ -11,6 +11,7 @@ bool sign_flag = false;
 
 //reference manual: https://edge.edx.org/c4x/BITSPilani/EEE231/asset/8086_family_Users_Manual_1_.pdf
 
+//these arrays are synchronized
 uint16_t registers[8] = {
 	0,
 	0,
@@ -170,7 +171,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0046_add_sub_cmp", ios::in | ios::binary);
+    file.open("bin/listing_0048_ip_register", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
@@ -182,12 +183,32 @@ int main() {
 		file.read(reinterpret_cast<char*>(buffer), length);
 		file.close();
 
-		int idx = 0;
-		while (idx < length) {
-			uint8_t byte 					= buffer[idx];
+		int instruction_pointer = 0;
+		int counter = 0;
+		while (instruction_pointer < length && counter < 20) {
+			counter++;
+			uint8_t byte 					= buffer[instruction_pointer];
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
 			uint8_t imm_mov_code			= 0b11110000 & byte;
 			uint8_t jump_code				= 0b11111111 & byte;
+
+			if (jump_code == 0b01110101) {
+				cout << get_asm_op_code(byte) << " ";
+
+				instruction_pointer++;
+				uint8_t byte2 = buffer[instruction_pointer];
+
+				if (byte2 & 0b10000000) {
+					byte2 = (0xff - byte2);
+					cout << "-" << +byte2 << endl;
+				} else {
+					cout << "+" << +byte2 << endl;
+				}
+
+				if (!zero_flag) instruction_pointer -= byte2;
+				else instruction_pointer++;
+				continue;
+			}
 
 			if (
 				jump_code == 0b01110100 ||
@@ -198,7 +219,6 @@ int main() {
 				jump_code == 0b01111010 ||
 				jump_code == 0b01110000 ||
 				jump_code == 0b01111000 ||
-				jump_code == 0b01110101 ||
 				jump_code == 0b01111101 ||
 				jump_code == 0b01111111 ||
 				jump_code == 0b01110011 ||
@@ -213,28 +233,28 @@ int main() {
 			) {
 				cout << get_asm_op_code(byte) << " ";
 
-				idx++;
-				uint8_t byte2 = buffer[idx];
+				instruction_pointer++;
+				uint8_t byte2 = buffer[instruction_pointer];
 
 				cout << +byte2 << endl;
 
-				idx++;
+				instruction_pointer++;
 				continue;
 			}
 
 			if (mov_add_sub_cmp_code == 0b00000100 || mov_add_sub_cmp_code == 0b00101100 || mov_add_sub_cmp_code == 0b00111100) {
 				uint8_t w = byte & 0b00000001;
 
-				idx++;
-				uint8_t byte2 = buffer[idx];
+				instruction_pointer++;
+				uint8_t byte2 = buffer[instruction_pointer];
 
 				if (mov_add_sub_cmp_code == 0b00000100) cout << "add ";
 				if (mov_add_sub_cmp_code == 0b00101100) cout << "sub ";
 				if (mov_add_sub_cmp_code == 0b00111100) cout << "cmp ";
 
 				if (w == 1) {
-					idx++;
-					uint8_t byte3 = buffer[idx];
+					instruction_pointer++;
+					uint8_t byte3 = buffer[instruction_pointer];
 					uint16_t data = (uint16_t)byte3 << 8 | byte2;
 
 					Registers ax 	= Registers::ax;
@@ -265,14 +285,14 @@ int main() {
 					cout << "al, " << +byte2 << endl;
 				}
 
-				idx++;
+				instruction_pointer++;
 				continue;
 			}
 
 			//add, sub, cmp
 			if (mov_add_sub_cmp_code == 0b00000000 || mov_add_sub_cmp_code == 0b00101000 || mov_add_sub_cmp_code == 0b00111000) {
-				idx++;
-				uint8_t byte2 = buffer[idx];
+				instruction_pointer++;
+				uint8_t byte2 = buffer[instruction_pointer];
 				uint8_t mod = (byte2 & 0b11000000) >> 6;
 				uint8_t reg = (byte2 & 0b00111000) >> 3;
 				uint8_t rm	= byte2 & 0b00000111;
@@ -312,8 +332,8 @@ int main() {
 						uint16_t regIdx 	= get_register_indexes(reg, w);
 						const char* regName = register_names[regIdx];
 
-						idx++;
-						uint8_t disp = buffer[idx];
+						instruction_pointer++;
+						uint8_t disp = buffer[instruction_pointer];
 
 						if (d == 1) {
 							cout << regName << ", " << "[" << ea << " + " <<  +disp << "]" << endl;
@@ -332,10 +352,10 @@ int main() {
 						const char* dest;
 						const char* src;
 
-						idx++;
-						uint8_t byte3 = buffer[idx];
-						idx++;
-						uint8_t byte4 = buffer[idx];
+						instruction_pointer++;
+						uint8_t byte3 = buffer[instruction_pointer];
+						instruction_pointer++;
+						uint8_t byte4 = buffer[instruction_pointer];
 
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
@@ -354,10 +374,10 @@ int main() {
 
 						//16-bit displacement
 						if (rm == 0b00000110) {
-							idx++;
-							uint8_t byte3 = buffer[idx];
-							idx++;
-							uint8_t byte4 = buffer[idx];
+							instruction_pointer++;
+							uint8_t byte3 = buffer[instruction_pointer];
+							instruction_pointer++;
+							uint8_t byte4 = buffer[instruction_pointer];
 							
 							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
@@ -432,14 +452,14 @@ int main() {
 					}
 				}
 
-				idx++;
+				instruction_pointer++;
 				continue;
 			}
 
 			//ADD, SUB, CMP immediate-to-register
 			if (mov_add_sub_cmp_code == 0b10000000) {
-				idx++;
-				uint8_t byte2 			= buffer[idx];
+				instruction_pointer++;
+				uint8_t byte2 			= buffer[instruction_pointer];
 				uint8_t mod 			= (byte2 & 0b11000000) >> 6;
 				uint8_t w 				= (byte & 0b00000001);
 				uint8_t s 				= (byte & 0b00000010) >> 1;
@@ -457,12 +477,12 @@ int main() {
 						const char* ea = ea_calculation(rm);
 						cout << "[" << ea << "], ";
 
-						idx++;
-						uint8_t data = buffer[idx];
+						instruction_pointer++;
+						uint8_t data = buffer[instruction_pointer];
 
 						if (s == 0 && w == 1) {
-							idx++;
-							uint8_t data2 = buffer[idx];
+							instruction_pointer++;
+							uint8_t data2 = buffer[instruction_pointer];
 
 							uint16_t allData = data2 << 8 | data;
 
@@ -479,17 +499,17 @@ int main() {
 					case 0b00000001: {
 						const char* ea = ea_calculation(rm);
 
-						idx++;
-						uint8_t byte3 = buffer[idx];
+						instruction_pointer++;
+						uint8_t byte3 = buffer[instruction_pointer];
 
 						cout << "[" << ea << " + " << +byte3 << "], ";
 
-						idx++;
-						uint8_t data = buffer[idx];
+						instruction_pointer++;
+						uint8_t data = buffer[instruction_pointer];
 
 						if (s == 0 && w == 1) {
-							idx++;
-							uint8_t data2 = buffer[idx];
+							instruction_pointer++;
+							uint8_t data2 = buffer[instruction_pointer];
 
 							uint16_t allData = data2 << 8 | data;
 
@@ -505,21 +525,21 @@ int main() {
 					case 0b00000010: {
 						const char* ea = ea_calculation(rm);
 						
-						idx++;
-						uint8_t byte3 = buffer[idx];
-						idx++;
-						uint8_t byte4 = buffer[idx];
+						instruction_pointer++;
+						uint8_t byte3 = buffer[instruction_pointer];
+						instruction_pointer++;
+						uint8_t byte4 = buffer[instruction_pointer];
 
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 						cout << "[" << ea << " + " << +disp << "], ";
 
-						idx++;
-						uint8_t data = buffer[idx];
+						instruction_pointer++;
+						uint8_t data = buffer[instruction_pointer];
 
 						if (s == 0 && w == 1) {
-							idx++;
-							uint8_t data2 = buffer[idx];
+							instruction_pointer++;
+							uint8_t data2 = buffer[instruction_pointer];
 
 							uint16_t allData = data2 << 8 | data;
 
@@ -539,12 +559,12 @@ int main() {
 
 						cout << regName << ", "; 
 
-						idx++;
-						uint8_t data = buffer[idx];
+						instruction_pointer++;
+						uint8_t data = buffer[instruction_pointer];
 
 						if (s == 0 && w == 1) {
-							idx++;
-							uint8_t data2 = buffer[idx];
+							instruction_pointer++;
+							uint8_t data2 = buffer[instruction_pointer];
 							uint16_t allData = data2 << 8 | data;
 
 							if ((byte2 & 0b00111000) == 0b00000000) {
@@ -577,7 +597,7 @@ int main() {
 					}
 				}
 
-				idx++;
+				instruction_pointer++;
 				continue;
 			}
 
@@ -586,8 +606,8 @@ int main() {
 				uint8_t d = byte & 0b00000010;
 				uint8_t w = byte & 0b00000001;
 
-				idx++;
-				uint8_t byte2 	= buffer[idx];
+				instruction_pointer++;
+				uint8_t byte2 	= buffer[instruction_pointer];
 				uint8_t mod 	= byte2 & 0b11000000;
 				uint8_t reg		= (byte2 & 0b00111000) >> 3;
 				uint8_t rm		= byte2 & 0b00000111;
@@ -603,10 +623,10 @@ int main() {
 					
 						//do 16-bit displacement
 						if (rm == 0b00000110) {
-							idx++;
-							uint8_t byte3 = buffer[idx];
-							idx++;
-							uint8_t byte4 = buffer[idx];
+							instruction_pointer++;
+							uint8_t byte3 = buffer[instruction_pointer];
+							instruction_pointer++;
+							uint8_t byte4 = buffer[instruction_pointer];
 
 							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
@@ -632,8 +652,8 @@ int main() {
 
 					//8-bit displacement
 					case 0b01000000: {
-						idx++;
-						uint8_t byte3 = buffer[idx];
+						instruction_pointer++;
+						uint8_t byte3 = buffer[instruction_pointer];
 
 						const char* ea = ea_calculation(rm);
 						uint16_t regIdx = get_register_indexes(reg, w);
@@ -650,10 +670,10 @@ int main() {
 
 					//16-bit displacement
 					case 0b10000000: {					
-						idx++;
-						uint8_t byte3 = buffer[idx];
-						idx++;
-						uint8_t byte4 = buffer[idx];
+						instruction_pointer++;
+						uint8_t byte3 = buffer[instruction_pointer];
+						instruction_pointer++;
+						uint8_t byte4 = buffer[instruction_pointer];
 
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
@@ -700,7 +720,7 @@ int main() {
 					}
 				}
 
-				idx++;
+				instruction_pointer++;
 				continue;
 			}
 
@@ -715,12 +735,12 @@ int main() {
 				uint16_t regAddr	= register_indexes[regIdx];
 				const char* dst 	= register_names[regIdx];
 
-				idx++;
-				uint8_t byte2 = buffer[idx];
+				instruction_pointer++;
+				uint8_t byte2 = buffer[instruction_pointer];
 
 				if (w == 0b00000001) {
-					idx++;
-					uint8_t byte3 = buffer[idx];
+					instruction_pointer++;
+					uint8_t byte3 = buffer[instruction_pointer];
 					uint16_t disp = (uint16_t)byte3 << 8 | byte2;
 
 					registers[regAddr] = disp;
@@ -730,20 +750,29 @@ int main() {
 					cout << asmCode << " " << dst << ", " << +byte2 << endl;
 				}				
 
-				idx++;
+				instruction_pointer++;
 				continue;
 			}
 
-			idx++;
 		}
-	}
 
-	for (int i = 0; i < 8; ++i) {
-		cout << i << " : " << registers[i] << endl;
-	}
+		cout << endl;
+		cout << "ax: " << registers[0] << endl;
+		cout << "bx: " << registers[1] << endl;
+		cout << "cx: " << registers[2] << endl;
+		cout << "dx: " << registers[3] << endl;
+		cout << "sp: " << registers[4] << endl;
+		cout << "bp: " << registers[5] << endl;
+		cout << "si: " << registers[6] << endl;
+		cout << "di: " << registers[7] << endl;
 	 
-	cout << "Sign Flag: " << sign_flag << endl;
-	cout << "Zero Flag: " << zero_flag << endl;
+		cout << endl;
+		cout << "Sign Flag: " << sign_flag << endl;
+		cout << "Zero Flag: " << zero_flag << endl;
+		cout << "Instruction Pointer: " << instruction_pointer << endl;
+
+		cout << endl;
+	}
 
     return 0;
 }

@@ -171,7 +171,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0048_ip_register", ios::in | ios::binary);
+    file.open("bin/listing_0049_conditional_jumps", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
@@ -184,9 +184,7 @@ int main() {
 		file.close();
 
 		int instruction_pointer = 0;
-		int counter = 0;
-		while (instruction_pointer < length && counter < 20) {
-			counter++;
+		while (instruction_pointer < length) {
 			uint8_t byte 					= buffer[instruction_pointer];
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
 			uint8_t imm_mov_code			= 0b11110000 & byte;
@@ -205,8 +203,13 @@ int main() {
 					cout << "+" << +byte2 << endl;
 				}
 
-				if (!zero_flag) instruction_pointer -= byte2;
-				else instruction_pointer++;
+				if (!zero_flag) {
+					instruction_pointer -= byte2;
+				}
+				else {
+					instruction_pointer++;
+				}
+
 				continue;
 			}
 
@@ -565,7 +568,7 @@ int main() {
 						if (s == 0 && w == 1) {
 							instruction_pointer++;
 							uint8_t data2 = buffer[instruction_pointer];
-							uint16_t allData = data2 << 8 | data;
+							uint16_t allData = data2 << 8 | allData;
 
 							if ((byte2 & 0b00111000) == 0b00000000) {
 								registers[regIdx] += allData;
@@ -589,6 +592,26 @@ int main() {
 
 							cout << +allData;
 						} else {
+							if ((byte2 & 0b00111000) == 0b00000000) {
+								registers[regIdx] += data;
+
+								if (registers[regIdx] == 0) zero_flag = true;
+								else zero_flag = false;
+
+								if ((registers[regIdx] & 0x8000) == 0x8000) sign_flag = true;
+								else sign_flag = false;
+							}
+							if ((byte2 & 0b00111000) == 0b00101000) {
+								registers[regIdx] -= data;
+								
+								if (registers[regIdx] == 0) zero_flag = true;
+								else zero_flag = false;
+
+								if ((registers[regIdx] & 0x8000) == 0x8000) sign_flag = true;
+								else sign_flag = false;
+							}
+							if ((byte2 & 0b00111000) == 0b00111000) registers[regIdx] - data;
+
 							cout << +data;
 						}
 						cout << endl;
@@ -748,7 +771,7 @@ int main() {
 					cout << asmCode << " " << dst << ", " << disp << endl;
 				} else {
 					cout << asmCode << " " << dst << ", " << +byte2 << endl;
-				}				
+				}
 
 				instruction_pointer++;
 				continue;

@@ -3,13 +3,15 @@
 
 using namespace std;
 
+//reference manual: https://edge.edx.org/c4x/BITSPilani/EEE231/asset/8086_family_Users_Manual_1_.pdf
+
 typedef uint8_t u8;
 typedef uint16_t u16;
 
 bool zero_flag = false;
 bool sign_flag = false;
 
-//reference manual: https://edge.edx.org/c4x/BITSPilani/EEE231/asset/8086_family_Users_Manual_1_.pdf
+u16 memory[1048576];
 
 //these arrays are synchronized
 uint16_t registers[8] = {
@@ -197,20 +199,17 @@ int main() {
 				uint8_t byte2 = buffer[instruction_pointer];
 
 				if (byte2 & 0b10000000) {
-					byte2 = (0xff - byte2);
-					cout << "-" << +byte2 << endl;
+					byte2 = (~byte2 + 1);
+
+					//have to subtract the two bytes for the jump...
+					cout << "-" << +(byte2 - 2);
 				} else {
-					cout << "+" << +byte2 << endl;
+					cout << "+" << +byte2;
 				}
 
 				if (!zero_flag) {
 					instruction_pointer -= byte2;
 				}
-				else {
-					instruction_pointer++;
-				}
-
-				continue;
 			}
 
 			if (
@@ -239,10 +238,7 @@ int main() {
 				instruction_pointer++;
 				uint8_t byte2 = buffer[instruction_pointer];
 
-				cout << +byte2 << endl;
-
-				instruction_pointer++;
-				continue;
+				cout << +byte2;
 			}
 
 			if (mov_add_sub_cmp_code == 0b00000100 || mov_add_sub_cmp_code == 0b00101100 || mov_add_sub_cmp_code == 0b00111100) {
@@ -283,13 +279,10 @@ int main() {
 					}
 					if (mov_add_sub_cmp_code == 0b00111100) registers[axAddr] - data;
 
-					cout << "ax, " << +data << endl;
+					cout << "ax, " << +data;
 				} else {
-					cout << "al, " << +byte2 << endl;
+					cout << "al, " << +byte2;
 				}
-
-				instruction_pointer++;
-				continue;
 			}
 
 			//add, sub, cmp
@@ -325,7 +318,6 @@ int main() {
 						} else {
 							cout << "[" << ea << "], " << regName;
 						}
-						cout << endl;
 
 						break;
 					}
@@ -339,9 +331,9 @@ int main() {
 						uint8_t disp = buffer[instruction_pointer];
 
 						if (d == 1) {
-							cout << regName << ", " << "[" << ea << " + " <<  +disp << "]" << endl;
+							cout << regName << ", " << "[" << ea << " + " <<  +disp << "]";
 						} else {
-							cout << "[" << ea << " + " <<  +disp << "], " << regName << endl;
+							cout << "[" << ea << " + " <<  +disp << "], " << regName;
 						}
 
 						break;
@@ -363,9 +355,9 @@ int main() {
 						uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 						if (d == 1) {
-							cout << regName << ", " << "[" << ea << " + " <<  +disp << "]" << endl;;
+							cout << regName << ", " << "[" << ea << " + " <<  +disp << "]";
 						} else {
-							cout << "[" << ea << " + " <<  +disp << "], " << regName << endl;
+							cout << "[" << ea << " + " <<  +disp << "], " << regName;
 						}
 						
 						break;
@@ -390,14 +382,14 @@ int main() {
 								src = ea_calculation(rm);
 								dst = register_names[regIdx];
 
-								cout << dst << ", [" << src << " + " << +disp << "]" << endl;
+								cout << dst << ", [" << src << " + " << +disp << "]";
 							} else {
 								uint16_t regIdx = get_register_indexes(rm, w);
 
 								src = register_names[regIdx];
 								dst = ea_calculation(rm);
 
-								cout << "[" << dst << " + " << +disp << "], " << src << endl;
+								cout << "[" << dst << " + " << +disp << "], " << src;
 							}
 						}
 						
@@ -447,16 +439,13 @@ int main() {
 
 							if (mov_add_sub_cmp_code == 0b00111000) registers[dstIdx] - registers[srcIdx];
 
-							cout << dst << ", " << src << endl;
+							cout << dst << ", " << src;
 
 						}
 
 						break;
 					}
 				}
-
-				instruction_pointer++;
-				continue;
 			}
 
 			//ADD, SUB, CMP immediate-to-register
@@ -493,8 +482,6 @@ int main() {
 						} else {
 							cout << +data;
 						}
-						 
-						cout << endl;
 
 						break;
 					}
@@ -520,7 +507,6 @@ int main() {
 						} else {
 							cout << +data;
 						}
-						cout << endl;
 
 						break;
 					}
@@ -550,7 +536,6 @@ int main() {
 						} else {
 							cout << +data;
 						}
-						cout << endl;
 
 						break;
 					}
@@ -614,14 +599,10 @@ int main() {
 
 							cout << +data;
 						}
-						cout << endl;
 
 						break;
 					}
 				}
-
-				instruction_pointer++;
-				continue;
 			}
 
 			// Mov Register/memory to/from register
@@ -654,9 +635,9 @@ int main() {
 							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 							if (d == 0b00000010) {
-								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;
+								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]";
 							} else {
-								cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister << endl;
+								cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister;
 							}					
 
 							break;
@@ -665,9 +646,9 @@ int main() {
 						//else no displacement		
 
 						if (d == 0b00000010) {
-							cout << asmCode << " " <<  movRegister << ", [" << ea << "]" << endl;
+							cout << asmCode << " " <<  movRegister << ", [" << ea << "]";
 						} else {
-							cout << asmCode << " [" << ea << "], " << movRegister << endl;
+							cout << asmCode << " [" << ea << "], " << movRegister;
 						}
 
 						break;
@@ -683,9 +664,9 @@ int main() {
 						const char* movRegister = register_names[regIdx];
 
 						if (d == 0b00000010) {
-							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]" << endl;  
+							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +byte3 << "]";  
 						} else {
-							cout << asmCode << " [" << ea << " + " << +byte3 << "], " << movRegister << endl;
+							cout << asmCode << " [" << ea << " + " << +byte3 << "], " << movRegister;
 						}
 
 						break;
@@ -705,9 +686,9 @@ int main() {
 						const char* movRegister = register_names[regIdx];		
 
 						if (d == 0b00000010) {							
-							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]" << endl;  
+							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]";  
 						} else {
-							cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister << endl;
+							cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister;
 						}					
 
 						break;
@@ -738,13 +719,10 @@ int main() {
 						registers[register_indexes[dstIndex]] = registers[register_indexes[srcIndex]];
 
 						//print the asm instruction
-						cout << asmCode << " " << dst << ", " << src << endl;
+						cout << asmCode << " " << dst << ", " << src;
 						break;
 					}
 				}
-
-				instruction_pointer++;
-				continue;
 			}
 
 			//immediate to register move
@@ -768,15 +746,16 @@ int main() {
 
 					registers[regAddr] = disp;
 
-					cout << asmCode << " " << dst << ", " << disp << endl;
+					cout << asmCode << " " << dst << ", " << disp;
 				} else {
-					cout << asmCode << " " << dst << ", " << +byte2 << endl;
+					cout << asmCode << " " << dst << ", " << +byte2;
 				}
-
-				instruction_pointer++;
-				continue;
 			}
 
+			instruction_pointer++;
+			cout << "   ;   instruction pointer: " << instruction_pointer << endl;
+
+			
 		}
 
 		cout << endl;

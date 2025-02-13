@@ -173,7 +173,7 @@ const char* ea_calculation(uint8_t byte) {
 
 int main() {
 	fstream file;
-    file.open("bin/listing_0049_conditional_jumps", ios::in | ios::binary);
+    file.open("bin/listing_0051_memory_mov", ios::in | ios::binary);
  
 	if (file) {
 		file.seekg(0, file.end);
@@ -189,7 +189,8 @@ int main() {
 		while (instruction_pointer < length) {
 			uint8_t byte 					= buffer[instruction_pointer];
 			uint8_t mov_add_sub_cmp_code 	= 0b11111100 & byte;
-			uint8_t imm_mov_code			= 0b11110000 & byte;
+			uint8_t imm_to_memory_mov_code	= 0b11111110 & byte;
+			uint8_t imm_register_mov_code	= 0b11110000 & byte;
 			uint8_t jump_code				= 0b11111111 & byte;
 
 			if (jump_code == 0b01110101) {
@@ -363,7 +364,7 @@ int main() {
 						break;
 					}
 
-					case 0b00000011: {						
+					case 0b00000011: {		
 						const char* src;
 						const char* dst;
 
@@ -643,7 +644,7 @@ int main() {
 							break;
 						}
 
-						//else no displacement		
+						//else no displacement
 
 						if (d == 0b00000010) {
 							cout << asmCode << " " <<  movRegister << ", [" << ea << "]";
@@ -685,7 +686,7 @@ int main() {
 						uint16_t regIdx 		= get_register_indexes(reg, w);
 						const char* movRegister = register_names[regIdx];		
 
-						if (d == 0b00000010) {							
+						if (d == 0b00000010) {		
 							cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]";  
 						} else {
 							cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister;
@@ -726,7 +727,7 @@ int main() {
 			}
 
 			//immediate to register move
-			if (imm_mov_code == 0b10110000) {
+			if (imm_register_mov_code == 0b10110000) {
 				uint8_t w 	= (byte & 0b00001000) >> 3;
 				uint8_t reg = byte & 0b00000111;
 
@@ -752,10 +753,55 @@ int main() {
 				}
 			}
 
+			if (imm_to_memory_mov_code == 0b11000110) {				
+				instruction_pointer++;
+				uint8_t byte2 	= buffer[instruction_pointer];
+
+				uint8_t w 		= byte & 0b00000001;
+				uint8_t mod		= byte2 & 0b11000000;
+				uint8_t rm		= byte2 & 0b00000111;
+
+				instruction_pointer++;
+				uint8_t byte3 	= buffer[instruction_pointer];
+
+				cout << "mov ";
+
+				switch (mod) {
+					case 0b00000000: {
+						instruction_pointer++;
+						uint8_t byte4 = buffer[instruction_pointer];
+
+						uint16_t address = byte4 << 8 | byte3;
+
+						cout << "byte [+" << +address << "], ";
+
+						instruction_pointer++;
+						uint8_t byte5 = buffer[instruction_pointer];
+
+						uint16_t value;
+
+						if (w == 0x1) {
+							instruction_pointer++;
+							uint8_t byte6 = buffer[instruction_pointer];
+							
+							value = byte6 << 8 | byte5;
+						} else {
+							value = byte5;
+						}
+
+						cout << +value << endl;
+					}
+					
+				}
+
+			}
+
+
+
+
+
 			instruction_pointer++;
 			cout << "   ;   instruction pointer: " << instruction_pointer << endl;
-
-			
 		}
 
 		cout << endl;

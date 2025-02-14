@@ -625,7 +625,7 @@ int main() {
 						const char* ea 			= ea_calculation(rm);
 						uint16_t regIdx 		= get_register_indexes(reg, w);
 						const char* movRegister = register_names[regIdx];
-					
+
 						//do 16-bit displacement
 						if (rm == 0b00000110) {
 							instruction_pointer++;
@@ -636,6 +636,14 @@ int main() {
 							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 							if (d == 0b00000010) {
+								u8 high = memory[disp + 1];
+								u8 low	= memory[disp];
+
+								u16 value = high << 8 | low;
+
+								u16 index = register_indexes[regIdx];
+								registers[index] = value;
+
 								cout << asmCode << " " << movRegister << ", [+" << +disp << "]";
 							} else {
 								cout << asmCode << " [+" << +disp << "], " << movRegister;
@@ -790,12 +798,23 @@ int main() {
 							value = byte5;
 						}
 
+						//little endian
+						u8 high = value >> 8;
+						u8 low 	= value;
+
+						memory[address] 	= low;
+						memory[address + 1] = high;
+
 						cout << +value;
+
 						break;
 					}
 
 					case 0b01000000: {
 						const char* address_and_displacement = ea_calculation(rm);
+
+						uint16_t index 		= register_indexes[Registers::bx];
+						uint16_t address 	= registers[index] + byte3;
 
 						cout << "[" << address_and_displacement << " + " << +byte3 << "], ";
 
@@ -813,17 +832,17 @@ int main() {
 							value = byte4;
 						}
 
+						u8 high = value >> 8;
+						u8 low	= value;
+
+						memory[address] 	= low;
+						memory[address + 1] = high;
+
 						cout << +value;
 						break;
 					}
-					
 				}
-
 			}
-
-
-
-
 
 			instruction_pointer++;
 			cout << "   ;   instruction pointer: " << instruction_pointer << endl;

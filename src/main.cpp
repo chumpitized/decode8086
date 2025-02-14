@@ -636,9 +636,9 @@ int main() {
 							uint16_t disp = (uint16_t)byte4 << 8 | byte3;
 
 							if (d == 0b00000010) {
-								cout << asmCode << " " << movRegister << ", [" << ea << " + " << +disp << "]";
+								cout << asmCode << " " << movRegister << ", [+" << +disp << "]";
 							} else {
-								cout << asmCode << " [" << ea << " + " << +disp << "], " << movRegister;
+								cout << asmCode << " [+" << +disp << "], " << movRegister;
 							}					
 
 							break;
@@ -766,6 +766,7 @@ int main() {
 
 				cout << "mov ";
 
+				//incomplete, but enough for the homework
 				switch (mod) {
 					case 0b00000000: {
 						instruction_pointer++;
@@ -773,7 +774,7 @@ int main() {
 
 						uint16_t address = byte4 << 8 | byte3;
 
-						cout << "byte [+" << +address << "], ";
+						cout << "word [+" << +address << "], ";
 
 						instruction_pointer++;
 						uint8_t byte5 = buffer[instruction_pointer];
@@ -789,7 +790,31 @@ int main() {
 							value = byte5;
 						}
 
-						cout << +value << endl;
+						cout << +value;
+						break;
+					}
+
+					case 0b01000000: {
+						const char* address_and_displacement = ea_calculation(rm);
+
+						cout << "[" << address_and_displacement << " + " << +byte3 << "], ";
+
+						instruction_pointer++;
+						uint8_t byte4 = buffer[instruction_pointer];
+
+						uint16_t value;
+
+						if (w == 0x1) {
+							instruction_pointer++;
+							uint8_t byte5 = buffer[instruction_pointer];
+							
+							value = byte5 << 8 | byte4;
+						} else {
+							value = byte4;
+						}
+
+						cout << +value;
+						break;
 					}
 					
 				}
